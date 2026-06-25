@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Slingshot — IFSP Transition Tracker</title>
+<title>Slingshot: IFSP Transition Tracker</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -519,6 +519,55 @@ body {
   white-space: pre-wrap;
 }
 .email-modal-footer { padding: 14px 22px; border-top: 1px solid #E0D8CE; text-align: right; }
+
+/* ── Date log picker ── */
+.date-log-picker { margin-top: 4px; }
+.date-log-label { font-size: 12px; font-weight: 700; color: #4A4A4A; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.date-log-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.date-log-input {
+  padding: 8px 12px; border: 1px solid #E0D8CE; border-radius: 10px;
+  font-size: 13px; font-family: inherit; outline: none; color: #2F2F2F;
+  transition: border-color 0.15s;
+}
+.date-log-input:focus { border-color: #D97706; }
+
+/* ── Editable reminders email ── */
+.reminders-email-display { color: #0C4A6E; font-weight: 600; cursor: pointer; border-bottom: 1px dashed #70B8D8; padding-bottom: 1px; margin-left: 4px; }
+.reminders-email-display:hover { color: #D97706; border-bottom-color: #D97706; }
+.reminders-email-edit-row { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+
+/* ── Child switcher ── */
+.child-switcher-btn {
+  background: none; border: 1px solid rgba(255,255,255,0.2); color: white;
+  border-radius: 8px; padding: 5px 10px; cursor: pointer; font-size: 12px;
+  display: flex; align-items: center; gap: 5px; font-family: inherit;
+  transition: background 0.15s;
+}
+.child-switcher-btn:hover { background: rgba(255,255,255,0.1); }
+.child-switcher-btn strong { color: white; font-weight: 700; }
+.hdr-child { position: relative; }
+.child-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: #1E2D42; border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px; min-width: 180px; overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index: 100; display: none;
+}
+.child-dropdown.open { display: block; }
+.child-dropdown-item {
+  padding: 10px 14px; font-size: 13px; color: white; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; transition: background 0.1s;
+}
+.child-dropdown-item:hover { background: rgba(255,255,255,0.08); }
+.child-dropdown-item.active { background: rgba(217,119,6,0.2); color: #FCD34D; }
+.child-dropdown-add {
+  padding: 10px 14px; font-size: 12px; color: #9FB7C8; cursor: pointer;
+  border-top: 1px solid rgba(255,255,255,0.1); transition: background 0.1s;
+}
+.child-dropdown-add:hover { background: rgba(255,255,255,0.06); color: white; }
+
+/* ── Easterseals co-branding ── */
+.hdr-partner { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+.hdr-partner-label { font-size: 8px; font-weight: 600; color: #6B8FA8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
 </style>
 </head>
 <body>
@@ -552,6 +601,16 @@ body {
   </div>
 </div>
 
+<!-- Child picker screen (multi-child families) -->
+<div class="onboarding-overlay hidden" id="childPickerScreen">
+  <div class="onboarding-card">
+    <div class="ob-logo">slingshot</div>
+    <h1>Who are we tracking today?</h1>
+    <div class="child-grid" id="childPickerGrid" style="display:flex;flex-direction:column;gap:10px;margin:20px 0;"></div>
+    <button class="action-btn btn-ghost" onclick="addChild()" style="width:100%;justify-content:center">+ Add another child</button>
+  </div>
+</div>
+
 <!-- Reminders drawer backdrop -->
 <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeRemindersDrawer()"></div>
 
@@ -581,7 +640,33 @@ body {
     </select>
   </div>
   <div class="hdr-right">
-    <div class="hdr-child">Tracking <strong id="childNameHdr">Luca</strong></div>
+    <div class="hdr-partner">
+      <span class="hdr-partner-label">in partnership with</span>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 42" width="100" height="25" aria-label="Easterseals">
+        <circle cx="15" cy="7" r="2.8" fill="#F47920"/>
+        <circle cx="8" cy="13" r="2.2" fill="#F47920"/>
+        <circle cx="5" cy="21" r="3" fill="#F47920"/>
+        <circle cx="8" cy="29" r="2.2" fill="#F47920"/>
+        <circle cx="15" cy="35" r="2.8" fill="#F47920"/>
+        <circle cx="23" cy="38" r="1.8" fill="#F47920" opacity="0.75"/>
+        <circle cx="23" cy="4" r="1.8" fill="#F47920" opacity="0.75"/>
+        <circle cx="31" cy="4" r="2.4" fill="#F47920" opacity="0.9"/>
+        <circle cx="37" cy="9" r="1.5" fill="#F47920" opacity="0.6"/>
+        <circle cx="3" cy="15" r="1.4" fill="#F47920" opacity="0.55"/>
+        <circle cx="3" cy="27" r="1.4" fill="#F47920" opacity="0.55"/>
+        <text x="44" y="28" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif" font-size="19" font-weight="300" fill="#F47920" letter-spacing="-0.3">easterseals</text>
+      </svg>
+    </div>
+    <div class="hdr-child">
+      <button class="child-switcher-btn" id="childSwitcherBtn" onclick="toggleChildDropdown()">
+        <strong id="childNameHdr">Luca</strong>
+        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="child-dropdown" id="childDropdown">
+        <div class="child-dropdown-list" id="childDropdownList"></div>
+        <div class="child-dropdown-add" onclick="addChild()">+ Add child</div>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -605,7 +690,7 @@ body {
     <div class="progress-deadline-days" id="deadlineDays">...</div>
   </div>
   <button class="bell-btn" id="bellBtn" onclick="openRemindersDrawer()" title="Reminders">
-    🔔<span class="bell-badge" id="bellBadge">4</span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="bell-badge" id="bellBadge">4</span>
   </button>
   <button class="journey-toggle-btn pulsing" id="journeyToggleBtn" onclick="toggleMap()">
     See your full roadmap
@@ -616,7 +701,7 @@ body {
   <nav class="map hidden" id="mapPanel"></nav>
   <main class="detail" id="detailPanel">
     <div class="empty-detail">
-      <div style="font-size:32px;">📋</div>
+      <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BAE0FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
       <p>Open the roadmap above to choose a step.</p>
     </div>
   </main>
@@ -628,6 +713,16 @@ body {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CHILD = 'Luca';
+
+const ICONS = {
+  alert: `<svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  clock: `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  doc:   `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+  bell:  `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+  pin:   `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  chevron: `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><polyline points="6 9 12 15 18 9"/></svg>`,
+  edit:  `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+};
 
 const IFSP = {
   child: 'Luca Antonio Martinez',
@@ -646,9 +741,9 @@ const IFSP = {
   concernsEmail: 'communication and language development, social-emotional regulation, and motor development',
   // Current services
   services: [
-    'Speech-Language Therapy — 2x/week, 30 min, home setting',
-    'Developmental Instruction — 1x/week, 60 min, home setting',
-    'Occupational Therapy — monthly consultation',
+    'Speech-Language Therapy: 2x/week, 30 min, home setting',
+    'Developmental Instruction: 1x/week, 60 min, home setting',
+    'Occupational Therapy: monthly consultation',
   ],
   // Transition steps parsed from the IFSP transition table
   transitionSteps: [
@@ -667,7 +762,7 @@ const IFSP = {
     'eligibility-meeting':{ date: 'Jun 30, 2026',  source: 'scheduled', note: 'Transition conference scheduled' },
     'eval-complete':      { date: 'Jul-Aug 2026',  source: 'scheduled', note: 'MCPS completes Part B evaluation' },
     'iep-meeting':        { date: 'Sep 2026',       source: 'scheduled', note: 'IEP meeting if eligible' },
-    'services-begin':     { date: 'Oct 3, 2026',   source: 'hard-deadline', note: 'Part C ends — hard deadline' },
+    'services-begin':     { date: 'Oct 3, 2026',   source: 'hard-deadline', note: 'Part C ends. Hard deadline.' },
   },
 };
 
@@ -867,7 +962,7 @@ const STEP_DCPS_OVERRIDES = {
   },
   'eligibility-meeting': {
     label: 'Transition conference at DCPS Early Stages',
-    sub:   'Centralized eligibility meeting — not at the school',
+    sub:   'Centralized eligibility meeting, not at the school',
   },
   'sign-consent': {
     sub: 'Authorize DCITP to share records with DCPS Early Stages',
@@ -880,11 +975,11 @@ const STEP_DCPS_OVERRIDES = {
 
 const BRANCH_COLORS = {
   eligible:              { icon: '✓', cls: 'green',  label: 'Found eligible for special education' },
-  'not-eligible-fight':  { icon: '!', cls: 'orange', label: 'Not eligible — I disagree' },
-  'not-eligible-ok':     { icon: '~', cls: 'grey',   label: 'Not eligible — I accept it for now' },
+  'not-eligible-fight':  { icon: '!', cls: 'orange', label: 'Not eligible: I disagree' },
+  'not-eligible-ok':     { icon: '~', cls: 'grey',   label: 'Not eligible: accepted for now' },
   '504-offered':         { icon: '§', cls: 'blue',   label: '504 plan offered instead of IEP' },
   'now-eligible':        { icon: '✓', cls: 'green',  label: 'Second evaluation found eligible' },
-  'still-not-eligible':  { icon: '!', cls: 'red',    label: 'Still not eligible — escalate' },
+  'still-not-eligible':  { icon: '!', cls: 'red',    label: 'Still not eligible: escalate' },
   'accept-504':          { icon: '~', cls: 'grey',   label: 'Accept the 504 plan' },
   'push-for-iep':        { icon: '↑', cls: 'orange', label: 'Push for IEP instead' },
 };
@@ -997,7 +1092,7 @@ const STEPS = [
     sub: 'Before starting the process',
     what: `Write down specific things you're seeing at home or hearing from teachers. Dates matter. "On April 3rd he couldn't..." is more useful than "he often struggles."`,
     why: `Your written observations become part of the official record. If the school later disputes that a problem exists, you want a dated log showing the pattern.`,
-    howTo: `Keep a running note on your phone. One sentence per incident. Date, what happened, who was there. Don't filter — write it all down and decide what's relevant later.`,
+    howTo: `Keep a running note on your phone. One sentence per incident. Date, what happened, who was there. Don't filter. Write it all down and decide what's relevant later.`,
     deadline: null,
     loggable: true,
     ifspNote: `Luca's MCITP service coordinator, Patricia Chen, notified MCPS of his potential eligibility on March 1, 2026. The IFSP itself is the primary document of his developmental history and family concerns.`,
@@ -1007,15 +1102,15 @@ const STEPS = [
     label: 'Reach out to the school',
     sub: 'Connect with the receiving school now',
     what: `A warm outreach to the principal or SPED coordinator at Luca's receiving school. This starts your relationship with the school team and gets you on their radar before the June 30 conference.`,
-    why: `The transition conference is 6 days away. Schools are busy — if you haven't connected yet, a brief email today ensures someone on the school side is prepared.`,
-    howTo: `Select the school above. Then copy the email below and send it from your personal email. CC yourself. Keep the tone warm — you're not filing a complaint, you're starting a relationship.`,
-    deadline: { label: 'Transition conference is June 30 — reach out before then' },
+    why: `The transition conference is 6 days away. Schools are busy. If you haven't connected yet, a brief email today ensures someone on the school side is prepared.`,
+    howTo: `Select the school above. Then copy the email below and send it from your personal email. CC yourself. Keep the tone warm. You are not filing a complaint, you are starting a relationship.`,
+    deadline: { label: 'Transition conference is June 30. Reach out before then.' },
     loggable: true,
   },
   {
     id: 'sign-consent', num: 3,
     label: 'Send IFSP records and sign consent',
-    sub: 'May 2026 — per IFSP transition plan',
+    sub: 'May 2026 (per IFSP transition plan)',
     what: `Send Luca's IFSP summary, BDI-3 results, and progress notes to MCPS with your signed consent. This is the packet Patricia Chen will help you prepare.`,
     why: `Without your records, MCPS starts from scratch. Your IFSP documents years of services, progress, and professional observations that should inform their evaluation.`,
     howTo: `Work with Patricia Chen to prepare the consent and document packet. Make sure BDI-3 scores, all three service providers' progress notes, and the transition plan are included.`,
@@ -1035,11 +1130,11 @@ const STEPS = [
   {
     id: 'eligibility-meeting', num: 5,
     label: 'Transition conference and eligibility meeting',
-    sub: 'June 30, 2026 at 10:00 AM — virtual via Teams',
+    sub: 'June 30, 2026 at 10:00 AM, virtual via Teams',
     what: `The IEP team reviews Luca's evaluation results and decides whether he qualifies for Part B special education services. Patricia Chen, MCPS, and an eligibility specialist will attend.`,
     why: `The outcome here determines everything that follows. You don't have to agree to anything at this meeting. You can say "I'd like time to review" before signing anything.`,
     howTo: `Bring the IFSP and your notes. Ask the team to walk through each area before any eligibility decision. If you disagree with a finding, say so and ask them to note your disagreement in writing.`,
-    deadline: { label: 'Scheduled: June 30, 2026 at 10:00 AM — virtual via Teams' },
+    deadline: { label: 'Scheduled: June 30, 2026 at 10:00 AM, virtual via Teams' },
     loggable: true,
     isBranch: true,
     branchLabel: 'What did the team decide?',
@@ -1053,7 +1148,7 @@ const BRANCH_STEPS = {
       id: 'iep-meeting', num: '6A',
       label: 'IEP team meeting',
       sub: 'Goals and services written',
-      what: `The IEP team writes Luca's Individualized Education Program — goals, services (what, how often, by whom), and placement. This document governs everything.`,
+      what: `The IEP team writes Luca's Individualized Education Program: goals, services (what, how often, by whom), and placement. This document governs everything.`,
       why: `The IEP is a legal contract. Services not written in the IEP don't have to be provided.`,
       howTo: `Come with your own list of goals based on the IFSP outcomes. Push for specifics: not "speech therapy" but "speech therapy 2x/week 30 min with a licensed SLP." Ask that IFSP services inform the IEP starting point.`,
       deadline: { label: 'IEP must be in place by October 3, 2026 (Luca\'s third birthday)' },
@@ -1065,18 +1160,18 @@ const BRANCH_STEPS = {
       sub: 'Or request changes in writing first',
       what: `You receive the draft IEP and either sign it (approving services), sign with written disagreement, or ask for changes before signing.`,
       why: `You don't have to sign at the meeting. You can take it home, review it, and respond in writing. Services are often less than what was discussed verbally.`,
-      howTo: `Compare service hours to what was discussed. Check that goals are measurable and specific. Compare to IFSP service levels — any significant reduction should be explained in writing.`,
+      howTo: `Compare service hours to what was discussed. Check that goals are measurable and specific. Compare to IFSP service levels. Any significant reduction should be explained in writing.`,
       deadline: null,
       loggable: true,
     },
     {
       id: 'services-begin', num: '8A',
       label: 'Part B services begin',
-      sub: 'October 3, 2026 — hard deadline',
+      sub: 'October 3, 2026 (hard deadline)',
       what: `Services listed in the IEP must start no later than Luca's third birthday on October 3, 2026. Track whether they actually happen at the correct frequency.`,
       why: `Service delivery gaps are the most common compliance failure. Create a log from day one.`,
       howTo: `Log each session: date, service type, provider, duration. Check against the IEP monthly. If sessions are consistently missed, document and raise in writing.`,
-      deadline: { label: 'Part C ends October 3, 2026 — Part B must begin that day' },
+      deadline: { label: 'Part C ends October 3, 2026. Part B must begin that day.' },
       loggable: true,
     },
     {
@@ -1106,7 +1201,7 @@ const BRANCH_STEPS = {
     {
       id: 'request-iee', num: '6B',
       label: 'Request IEE at public expense',
-      sub: 'Independent evaluation — school pays',
+      sub: 'Independent evaluation (school pays)',
       what: `You have the right to an Independent Educational Evaluation (IEE) conducted by an evaluator not employed by the school district, at the district's expense.`,
       why: `School evaluators work for the school. An independent evaluator has no institutional interest. IEE results must be considered at the next eligibility meeting.`,
       howTo: `Send a written request immediately. The district must either fund the IEE or file for due process to defend their evaluation. Most districts comply.`,
@@ -1126,7 +1221,7 @@ const BRANCH_STEPS = {
     {
       id: 'second-eligibility', num: '8B',
       label: 'Second eligibility meeting',
-      sub: 'With IEE results — another decision point',
+      sub: 'With IEE results: another decision point',
       what: `The IEP team reconvenes with the IEE results and makes a new eligibility determination.`,
       why: `This meeting often goes differently. A strong IEE report combined with your documented observations frequently shifts the outcome.`,
       howTo: `Bring the IEE evaluator if possible. Highlight findings that contradict the school's evaluation. Ask the team to explain in writing any conclusions that differ from the IEE.`,
@@ -1165,7 +1260,7 @@ const BRANCH_STEPS = {
     {
       id: 'explore-504', num: '6C',
       label: 'Explore 504 accommodations',
-      sub: 'Lower bar — no specialized instruction',
+      sub: 'Lower bar, no specialized instruction',
       what: `A 504 plan provides accommodations (extra time, preferential seating) but not specialized instruction or IEP goals.`,
       why: `If Luca's challenges are primarily about access rather than instruction, a 504 may be enough. If he needs active teaching support, push for IEP.`,
       howTo: `Ask for a 504 meeting. Be specific about what accommodations would help. Services like speech therapy and OT are typically IEP-only.`,
@@ -1174,7 +1269,7 @@ const BRANCH_STEPS = {
     },
     {
       id: 'future-eval-request', num: '7C',
-      label: 'New evaluation request — future',
+      label: 'New evaluation request (future)',
       sub: 'You can re-request at any time',
       what: `If Luca's needs change or new evidence emerges, you can request a new evaluation at any time. There is no mandatory waiting period.`,
       why: `Circumstances change. A new teacher, a new diagnosis, or documented evidence of continued struggle can all support a new evaluation request.`,
@@ -1203,7 +1298,7 @@ const BRANCH_STEPS = {
     {
       id: '504-annual', num: '7D',
       label: '504 annual review',
-      sub: 'Required each year — use it to upgrade',
+      sub: 'Required each year. Use it to upgrade.',
       what: `504 plans should be reviewed annually. Use this to add accommodations or re-evaluate whether an IEP is warranted.`,
       why: `Luca's needs will change. Annual reviews are your opportunity to strengthen the plan or transition to IEP if the 504 isn't enough.`,
       howTo: `Before the meeting: document what worked and what didn't. If struggles have increased, bring data and ask whether IEP eligibility should be re-evaluated.`,
@@ -1438,6 +1533,14 @@ function completeOnboarding() {
   state.parentEmail     = emailVal;
   state.thirdBirthday   = dobVal ? dobToThirdBirthday(dobVal) : IFSP.thirdBirthday;
   state.onboardingComplete = true;
+
+  const childId = 'child_' + Date.now();
+  if (!state.children) state.children = [];
+  const existing = state.children.find(c => c.name === nameVal);
+  if (!existing) {
+    state.children.push({ id: childId, name: nameVal, thirdBirthday: state.thirdBirthday });
+    state.activeChildId = childId;
+  }
   saveState();
 
   document.getElementById('onboardingOverlay').classList.add('hidden');
@@ -1453,6 +1556,13 @@ function skipOnboarding() {
   state.parentEmail     = document.getElementById('ob-email').value.trim();
   state.thirdBirthday   = dobVal ? dobToThirdBirthday(dobVal) : IFSP.thirdBirthday;
   state.onboardingComplete = true;
+
+  const childId = 'child_' + Date.now();
+  if (!state.children) state.children = [];
+  if (state.children.length === 0) {
+    state.children.push({ id: childId, name: state.childName, thirdBirthday: state.thirdBirthday });
+    state.activeChildId = childId;
+  }
   saveState();
   document.getElementById('onboardingOverlay').classList.add('hidden');
   updateDynamicUI();
@@ -1478,9 +1588,7 @@ function renderRemindersDrawer() {
   const email = getParentEmail();
   const infoEl = document.getElementById('remindersInfo');
   if (infoEl) {
-    infoEl.textContent = email
-      ? `In the live app, these send automatically to ${email}.`
-      : 'In the live app, these send automatically to your email address.';
+    infoEl.innerHTML = `<span>Sends automatically to</span> <span class="reminders-email-display" onclick="editRemindersEmail()">${email || 'add your email'} ${ICONS.edit}</span>`;
   }
 
   const name = getChildName();
@@ -1587,7 +1695,7 @@ function initSchoolPicker() {
   if (IS_DCPS) {
     const wrapper = document.getElementById('schoolPicker').closest('.hdr-school');
     wrapper.innerHTML = `<div class="dcps-header-bar">
-      📍 DCPS Early Stages &nbsp;·&nbsp; 1200 First St NE, Washington DC 20002 &nbsp;·&nbsp; (202) 535-1500
+      ${ICONS.pin} DCPS Early Stages &nbsp;·&nbsp; 1200 First St NE, Washington DC 20002 &nbsp;·&nbsp; (202) 535-1500
     </div>`;
     return;
   }
@@ -1596,7 +1704,7 @@ function initSchoolPicker() {
   MCPS_SCHOOLS.forEach((school, i) => {
     const opt = document.createElement('option');
     opt.value = i;
-    opt.textContent = `${school.name} — ${school.city}`;
+    opt.textContent = `${school.name}, ${school.city}`;
     sel.appendChild(opt);
   });
   if (state.selectedSchool !== null) sel.value = state.selectedSchool;
@@ -1614,7 +1722,7 @@ function initSchoolPicker() {
 function renderMap() {
   const panel = document.getElementById('mapPanel');
   const activeId = state.activeStep || getActiveStepId();
-  let html = `<div class="map-title">Journey map — click any step</div>`;
+  let html = `<div class="map-title">Journey map</div>`;
 
   for (let i = 0; i < STEPS.length; i++) {
     const step = STEPS[i];
@@ -1784,7 +1892,7 @@ function updatePathLabel() {
     anchorEl.textContent = "Let's get started.";
     anchorEl.style.color = '#9B9086';
   } else if (done === 1 && (state.ifspSourced || []).includes('concerns')) {
-    anchorEl.textContent = 'Already underway — documentation logged from your IFSP upload.';
+    anchorEl.textContent = 'Already underway. Documentation logged from your IFSP upload.';
     anchorEl.style.color = '#5BA080';
   } else if (pct === 100) {
     anchorEl.textContent = 'All steps complete.';
@@ -1850,7 +1958,7 @@ function renderDetail() {
   const panel = document.getElementById('detailPanel');
   const id = state.activeStep;
   if (!id) {
-    panel.innerHTML = `<div class="empty-detail"><div style="font-size:32px">📋</div><p>Open the roadmap to choose a step.</p></div>`;
+    panel.innerHTML = `<div class="empty-detail"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BAE0FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><p>Open the roadmap to choose a step.</p></div>`;
     return;
   }
 
@@ -1880,7 +1988,7 @@ function renderDetail() {
         ? `<strong>The transition conference is today (June 30).</strong> Make sure you're prepared.`
         : `<strong>The June 30 conference has passed.</strong> Follow up with ${contact} on next steps.`;
     html += `<div class="urgency-banner">
-      <div class="urgency-icon">⏰</div>
+      <div class="urgency-icon">${ICONS.clock}</div>
       <div class="urgency-text">${urgencyText}</div>
     </div>`;
   }
@@ -1888,7 +1996,7 @@ function renderDetail() {
   // ── IFSP source banner
   if (id === 'concerns') {
     html += `<div class="ifsp-source-bar">
-      <div class="ifsp-source-icon">📋</div>
+      <div class="ifsp-source-icon">${ICONS.doc}</div>
       <div class="ifsp-source-text">
         <strong>Pre-loaded from ${childName}'s ${PROGRAM_ABBR} IFSP (April 14, 2026)</strong><br>
         Concern areas and transition dates were parsed from the uploaded IFSP document.
@@ -1898,7 +2006,7 @@ function renderDetail() {
 
   if (id === 'eligibility-meeting') {
     html += `<div class="ifsp-source-bar">
-      <div class="ifsp-source-icon">📋</div>
+      <div class="ifsp-source-icon">${ICONS.doc}</div>
       <div class="ifsp-source-text">
         <strong>Pre-loaded from ${childName}'s ${PROGRAM_ABBR} transition plan</strong><br>
         Conference date, participants, and timeline below were extracted from the IFSP document.
@@ -1912,9 +2020,9 @@ function renderDetail() {
     <div class="detail-title">${ds.label}</div>
     <div class="detail-sub">${ds.sub}</div>`;
 
-  if (ds.deadline) {
+  if (ds.deadline && !done) {
     html += `<div class="deadline-bar">
-      <div class="deadline-icon">⏱</div>
+      <div class="deadline-icon">${ICONS.clock}</div>
       <div class="deadline-text">${ds.deadline.label}</div>
     </div>`;
   }
@@ -1976,7 +2084,7 @@ function renderDetail() {
     if (done) {
       if (ifspSrc) {
         html += `<div class="date-logged-ifsp">
-          📋 ${date} <span class="badge">from IFSP</span>
+          ${ICONS.doc} ${date} <span class="badge">from IFSP</span>
           <span class="clear" data-clear="${id}">clear</span>
         </div>`;
       } else {
@@ -1987,7 +2095,7 @@ function renderDetail() {
       }
     } else {
       html += `<button class="action-btn btn-primary" data-log="${id}">
-        Mark as done — log today
+        Mark as done
       </button>`;
     }
   }
@@ -2074,15 +2182,31 @@ function renderDetail() {
 }
 
 function attachDetailEvents() {
-  document.querySelectorAll('[data-log]').forEach(el => {
-    el.addEventListener('click', () => {
-      const id = el.dataset.log;
-      const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      state.datesLogged[id] = today;
-      state.activeStep = getNextStep(id);
-      saveState();
-      renderMap();
-      renderDetail();
+  document.querySelectorAll('[data-log]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.log;
+      const todayISO = new Date().toISOString().split('T')[0];
+      const picker = document.createElement('div');
+      picker.className = 'date-log-picker';
+      picker.innerHTML = `
+        <div class="date-log-label">When did this happen?</div>
+        <div class="date-log-row">
+          <input type="date" class="date-log-input" value="${todayISO}" max="${todayISO}">
+          <button class="action-btn btn-primary date-log-confirm" style="padding:8px 14px">Log date</button>
+          <button class="action-btn btn-ghost date-log-cancel" style="padding:8px 12px">Cancel</button>
+        </div>`;
+      btn.replaceWith(picker);
+      picker.querySelector('.date-log-confirm').addEventListener('click', () => {
+        const val = picker.querySelector('.date-log-input').value;
+        const d = new Date(val + 'T12:00:00');
+        const formatted = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        state.datesLogged[id] = formatted;
+        state.activeStep = getNextStep(id);
+        saveState();
+        renderMap();
+        renderDetail();
+      });
+      picker.querySelector('.date-log-cancel').addEventListener('click', () => renderDetail());
     });
   });
 
@@ -2136,6 +2260,83 @@ function attachDetailEvents() {
   });
 }
 
+function editRemindersEmail() {
+  const email = getParentEmail();
+  const infoEl = document.getElementById('remindersInfo');
+  infoEl.innerHTML = `<div class="reminders-email-edit-row">
+    <input type="email" id="remindersEmailInput" value="${email}" placeholder="your@email.com"
+      style="flex:1;padding:5px 10px;border:1px solid #BAE0FF;border-radius:7px;font-size:12px;font-family:inherit;outline:none;background:white;color:#0C4A6E;">
+    <button onclick="saveRemindersEmail()" style="padding:5px 10px;background:#D97706;color:white;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;">Save</button>
+  </div>`;
+  const input = document.getElementById('remindersEmailInput');
+  input.focus(); input.select();
+}
+
+function saveRemindersEmail() {
+  const input = document.getElementById('remindersEmailInput');
+  if (input) { state.parentEmail = input.value.trim(); saveState(); renderRemindersDrawer(); }
+}
+
+function toggleChildDropdown() {
+  const dd = document.getElementById('childDropdown');
+  if (!dd) return;
+  dd.classList.toggle('open');
+  if (dd.classList.contains('open')) {
+    renderChildDropdown();
+    setTimeout(() => document.addEventListener('click', closeChildDropdownOutside, { once: true }), 0);
+  }
+}
+
+function closeChildDropdownOutside(e) {
+  const dd = document.getElementById('childDropdown');
+  const btn = document.getElementById('childSwitcherBtn');
+  if (dd && !dd.contains(e.target) && btn && !btn.contains(e.target)) dd.classList.remove('open');
+}
+
+function renderChildDropdown() {
+  const list = document.getElementById('childDropdownList');
+  if (!list) return;
+  const children = state.children || [];
+  if (children.length === 0) {
+    list.innerHTML = `<div class="child-dropdown-item active">${getChildName()}</div>`;
+    return;
+  }
+  list.innerHTML = children.map(c =>
+    `<div class="child-dropdown-item${c.id === state.activeChildId ? ' active' : ''}" onclick="switchChild('${c.id}')">${c.name}</div>`
+  ).join('') + `<div class="child-dropdown-add" onclick="addChild()">+ Add child</div>`;
+}
+
+function switchChild(childId) {
+  state.activeChildId = childId;
+  const child = (state.children || []).find(c => c.id === childId);
+  if (child) { state.childName = child.name; state.thirdBirthday = child.thirdBirthday; }
+  saveState();
+  document.getElementById('childDropdown').classList.remove('open');
+  updateDynamicUI(); updatePathLabel();
+}
+
+function addChild() {
+  document.getElementById('childDropdown')?.classList.remove('open');
+  const overlay = document.getElementById('onboardingOverlay');
+  overlay.classList.remove('hidden');
+  document.getElementById('ob-name').value = '';
+  document.getElementById('ob-dob').value = '';
+  document.getElementById('ob-parent-name').value = state.parentFirstName || '';
+  document.getElementById('ob-email').value = state.parentEmail || '';
+}
+
+function initDistrictMode() {
+  if (!IS_DCPS) return;
+  if (IFSP.stepSchedule && IFSP.stepSchedule['eligibility-meeting'] && !state.datesLogged['send-request']) {
+    const conf = IFSP.stepSchedule['eligibility-meeting'];
+    state.datesLogged['send-request'] = conf.date || 'June 30, 2026';
+    if (!state.ifspSourced) state.ifspSourced = [];
+    if (!state.ifspSourced.includes('send-request')) state.ifspSourced.push('send-request');
+    if (state.activeStep === 'send-request') state.activeStep = 'eligibility-meeting';
+    saveState();
+  }
+}
+
 function getNextStep(currentId) {
   const path = getActivePath();
   const idx = path.findIndex(p => p.step.id === currentId);
@@ -2176,6 +2377,7 @@ function addResetButton() {
 
 addResetButton();
 initSchoolPicker();
+initDistrictMode();
 initOnboarding();
 // Restore map panel visibility from saved state
 if (state.mapOpen) {
