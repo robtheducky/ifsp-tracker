@@ -343,6 +343,26 @@ body {
 .school-contact-bar .sc-name { font-weight: 700; color: #2F2F2F; }
 .school-contact-bar .sc-role { color: #9B9086; font-size: 11.5px; }
 
+/* ── DCPS mode ── */
+.dcps-header-bar {
+  color: #9FB7C8; font-size: 12px; padding: 6px 12px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px; line-height: 1.5;
+}
+.dcps-contact-card {
+  background: #F0F9FF; border: 1px solid #BAE0FF;
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 12px;
+  font-size: 12.5px; color: #0C4A6E;
+}
+.dcps-contact-card .dc-name { font-weight: 700; color: #1A2332; font-size: 13px; }
+.dcps-contact-card .dc-detail { color: #4A4A4A; margin-top: 2px; }
+.dcps-contact-card .dc-note { color: #0C4A6E; font-size: 11.5px; margin-top: 6px; font-style: italic; }
+.district-tag {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  background: rgba(217,119,6,0.35); color: #FCD34D;
+  border-radius: 4px; padding: 1px 6px; margin-left: 6px; vertical-align: middle;
+}
+
 /* ── Onboarding overlay ── */
 .onboarding-overlay {
   position: fixed; inset: 0; background: rgba(26,35,50,0.9);
@@ -553,7 +573,7 @@ body {
 <header class="hdr">
   <div class="hdr-left">
     <div class="hdr-logo">slingshot</div>
-    <div class="hdr-sub">IFSP Transition Tracker</div>
+    <div class="hdr-sub">IFSP Transition Tracker<span id="districtTag"></span></div>
   </div>
   <div class="hdr-school">
     <select id="schoolPicker" class="school-select">
@@ -815,6 +835,44 @@ const MCPS_SCHOOLS = [
   // Wyngate — confirmed: 9300 Wadsworth Drive, Bethesda MD 20817. Principal: Mrs. Catherine (Katie) Guenthner
   { name: 'Wyngate Elementary',                     city: 'Bethesda, MD 20817',           coordinator: 'Mrs. Catherine Guenthner', role: 'Principal' },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DISTRICT MODE — read from ?district=dcps or ?district=mcps
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DISTRICT      = (new URLSearchParams(window.location.search).get('district') || 'mcps').toLowerCase();
+const IS_DCPS       = DISTRICT === 'dcps';
+
+const PROGRAM_NAME  = IS_DCPS ? 'DC Infants and Toddlers Program (DCITP)'             : 'Montgomery County Infants and Toddlers Program (MCITP)';
+const PROGRAM_ABBR  = IS_DCPS ? 'DCITP'                                                : 'MCITP';
+const RECEIVING_AUTH = IS_DCPS ? 'DCPS'                                                : 'MCPS';
+
+const DCPS_EARLY_STAGES = {
+  name:    'DCPS Early Stages',
+  address: '1200 First Street NE, Washington, DC 20002',
+  phone:   '(202) 535-1500',
+  email:   'dcps.earlychildhood@dc.gov',
+  note:    'All Part B evaluations and transition conferences for DCITP families go through Early Stages. Individual school SPED coordinators become relevant only after eligibility is determined.',
+};
+
+// Step-level content overrides for DCPS mode
+const STEP_DCPS_OVERRIDES = {
+  'send-request': {
+    label:    'Reach out to DCPS Early Stages',
+    sub:      'They coordinate all Part B evaluations in DC',
+    what:     `DCPS Early Stages is the centralized office that manages all Part B special education evaluations and transition conferences for children transitioning from DCITP. Unlike Maryland, where each school has its own SPED team, all DC families go through Early Stages first. Individual school assignment comes after eligibility is determined.`,
+    why:      `Contacting Early Stages early gets you on their radar and helps you understand the DC-specific timeline. The transition conference must happen before your child's third birthday, and Early Stages schedules it.`,
+    howTo:    `Use the email template below. You can also call (202) 535-1500. Ask for confirmation that your DCITP service coordinator has already notified Early Stages of potential eligibility, and request information about scheduling the transition conference.`,
+    deadline: { label: 'Transition conference must be scheduled before the third birthday' },
+  },
+  'eligibility-meeting': {
+    label: 'Transition conference at DCPS Early Stages',
+    sub:   'Centralized eligibility meeting — not at the school',
+  },
+  'sign-consent': {
+    sub: 'Authorize DCITP to share records with DCPS Early Stages',
+  },
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BRANCH COLORS
@@ -1169,36 +1227,63 @@ function daysUntil(dateStr) {
 }
 
 function getEmailTemplate() {
+  if (IS_DCPS) return getEmailTemplateDCPS();
+
+  const name   = getChildName();
   const school = state.selectedSchool !== null ? MCPS_SCHOOLS[state.selectedSchool] : null;
   const salutation = school
     ? `Dear ${school.coordinator},`
     : `Dear [Principal / SPED Coordinator],`;
   const schoolLine = school
-    ? `We understand that Luca would be attending ${school.name} in ${school.city} once he transitions to Part B services.`
-    : `[We understand Luca would be attending your school once he transitions to Part B services.]`;
+    ? `We understand that ${name} would be attending ${school.name} in ${school.city} once he transitions to Part B services.`
+    : `[We understand ${name} would be attending your school once he transitions to Part B services.]`;
   const coordLine = school
-    ? `Could you connect us with ${school.coordinator} (${school.role}) or whoever will be coordinating Luca's transition on the school's end?`
-    : `Could you connect us with the SPED coordinator or whoever will be managing Luca's transition on the school's end?`;
+    ? `Could you connect us with ${school.coordinator} (${school.role}) or whoever will be coordinating ${name}'s transition on the school's end?`
+    : `Could you connect us with the SPED coordinator or whoever will be managing ${name}'s transition on the school's end?`;
 
   return `${salutation}
 
-My name is Elena Martinez, and I'm the parent of Luca Martinez (date of birth: October 3, 2023). Luca turns 3 on October 3, 2026, and he is currently receiving early intervention services through the Montgomery County Infants and Toddlers Program (MCITP).
+My name is ${getParentFirstName()}, and I'm the parent of ${name} (date of birth: ${IFSP.dob}). ${name} turns 3 on ${getThirdBirthday()}, and ${name} is currently receiving early intervention services through the ${PROGRAM_NAME}.
 
 ${schoolLine}
 
-Luca's service coordinator at MCITP, Patricia Chen, notified MCPS of his potential eligibility for Part B services in March 2026. His current IFSP identifies support needs in the areas of ${IFSP.concernsEmail}. We have a transition conference scheduled for June 30, 2026.
+${name}'s service coordinator at ${PROGRAM_ABBR}, Patricia Chen, notified ${RECEIVING_AUTH} of ${name}'s potential eligibility for Part B services in March 2026. ${name}'s current IFSP identifies support needs in the areas of ${IFSP.concernsEmail}. We have a transition conference scheduled for June 30, 2026.
 
 I want to make sure we are connected with the right people at the school ahead of that meeting. ${coordLine}
 
 A few quick questions:
-  1. What consent forms do you need from us to receive Luca's IFSP and progress records?
-  2. Will MCPS conduct its own Part B evaluation, or will you rely on MCITP's BDI-3 results?
+  1. What consent forms do you need from us to receive ${name}'s IFSP and progress records?
+  2. Will ${RECEIVING_AUTH} conduct its own Part B evaluation, or will you rely on ${PROGRAM_ABBR}'s assessment results?
   3. What should I bring to the June 30 conference?
 
-I've attached a copy of Luca's current IFSP for reference. Thank you so much for helping us make this transition a smooth one.
+I've attached a copy of ${name}'s current IFSP for reference. Thank you so much for helping us make this transition a smooth one.
 
 Warm regards,
-Elena Martinez
+${getParentFirstName()}
+[Your phone / email]
+[Today's date]`;
+}
+
+function getEmailTemplateDCPS() {
+  const name = getChildName();
+  return `Dear Early Stages Team,
+
+My name is ${getParentFirstName()}, and I am the parent of ${name} (date of birth: ${IFSP.dob}). ${name} turns 3 on ${getThirdBirthday()}, and ${name} is currently receiving early intervention services through the ${PROGRAM_NAME}.
+
+I understand that DCPS Early Stages coordinates all Part B evaluations and transition conferences for families transitioning from DCITP. ${name}'s DCITP service coordinator has notified DCPS of ${name}'s potential eligibility. ${name}'s current IFSP identifies support needs in the areas of ${IFSP.concernsEmail}.
+
+I want to make sure we are connected with the right person and understand the DC-specific timeline before the transition conference.
+
+A few quick questions:
+  1. What consent forms do we need to submit so DCITP can share ${name}'s records with Early Stages?
+  2. Has a transition conference been scheduled, or how do we request one?
+  3. Will Early Stages conduct its own Part B evaluation, or will you rely on DCITP's assessment results?
+  4. After eligibility is determined, how is school placement decided?
+
+I have attached a copy of ${name}'s current IFSP for reference. Thank you for helping us navigate this process.
+
+Warm regards,
+${getParentFirstName()}
 [Your phone / email]
 [Today's date]`;
 }
@@ -1321,6 +1406,12 @@ function updateDynamicUI() {
   if (el('childNameHdr'))  el('childNameHdr').textContent  = name;
   if (el('progressTitle')) el('progressTitle').textContent = `${name}'s IFSP transition`;
   if (el('deadlineDate'))  el('deadlineDate').textContent  = bday;
+  // District tag in header
+  const tagEl = el('districtTag');
+  if (tagEl) {
+    tagEl.className   = 'district-tag';
+    tagEl.textContent = IS_DCPS ? 'DC' : 'MD';
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1493,6 +1584,14 @@ function closeEmailPreview() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function initSchoolPicker() {
+  if (IS_DCPS) {
+    const wrapper = document.getElementById('schoolPicker').closest('.hdr-school');
+    wrapper.innerHTML = `<div class="dcps-header-bar">
+      📍 DCPS Early Stages &nbsp;·&nbsp; 1200 First St NE, Washington DC 20002 &nbsp;·&nbsp; (202) 535-1500
+    </div>`;
+    return;
+  }
+
   const sel = document.getElementById('schoolPicker');
   MCPS_SCHOOLS.forEach((school, i) => {
     const opt = document.createElement('option');
@@ -1537,6 +1636,9 @@ function renderMap() {
 }
 
 function renderStepRow(step, done, active, showLine, depth) {
+  const ov     = IS_DCPS && STEP_DCPS_OVERRIDES[step.id];
+  const label  = (ov && ov.label) || step.label;
+  const sub    = (ov && ov.sub)   || step.sub;
   const ifspSrc = isIfspSourced(step.id);
   const sched = getScheduledDate(step.id);
   const dotCls = done ? (ifspSrc ? 'ifsp-done' : 'done') : active ? 'active' : sched ? 'scheduled' : 'locked';
@@ -1567,10 +1669,10 @@ function renderStepRow(step, done, active, showLine, depth) {
       </div>
       <div class="step-label ${labelCls}" style="margin-top:4px">
         <div class="step-name ${nameCls}">
-          ${step.label}
+          ${label}
           ${step.isRepeat ? `<span class="repeat-badge">repeating</span>` : ''}
         </div>
-        <div class="step-meta">${step.sub}</div>
+        <div class="step-meta">${sub}</div>
         ${dateBadge}
       </div>
     </div>`;
@@ -1755,34 +1857,40 @@ function renderDetail() {
   const step = findStepDef(id);
   if (!step) return;
 
+  // Apply district-specific content overrides for display
+  const ov = IS_DCPS && STEP_DCPS_OVERRIDES[id];
+  const ds = ov ? { ...step, ...ov } : step;  // ds = displayStep
+
   const done = isDone(id);
   const date = getDate(id);
   const ifspSrc = isIfspSourced(id);
   const sched = IFSP.stepSchedule[id];
   const school = state.selectedSchool !== null ? MCPS_SCHOOLS[state.selectedSchool] : null;
+  const childName = getChildName();
 
   let html = '';
 
-  // ── Urgency banner for send-request (conference is 6 days away)
+  // ── Urgency banner for send-request
   if (id === 'send-request') {
     const days = daysUntil('2026-06-30');
+    const contact = IS_DCPS ? 'Early Stages' : 'the school';
     const urgencyText = days > 0
-      ? `The transition conference is in <strong>${days} day${days === 1 ? '' : 's'} (June 30).</strong> If you haven't connected with the school yet, today is the day.`
+      ? `The transition conference is in <strong>${days} day${days === 1 ? '' : 's'} (June 30).</strong> If you haven't connected with ${contact} yet, today is the day.`
       : days === 0
         ? `<strong>The transition conference is today (June 30).</strong> Make sure you're prepared.`
-        : `<strong>The June 30 conference has passed.</strong> Follow up with the school on next steps.`;
+        : `<strong>The June 30 conference has passed.</strong> Follow up with ${contact} on next steps.`;
     html += `<div class="urgency-banner">
       <div class="urgency-icon">⏰</div>
       <div class="urgency-text">${urgencyText}</div>
     </div>`;
   }
 
-  // ── IFSP source banner for steps with parsed data
+  // ── IFSP source banner
   if (id === 'concerns') {
     html += `<div class="ifsp-source-bar">
       <div class="ifsp-source-icon">📋</div>
       <div class="ifsp-source-text">
-        <strong>Pre-loaded from Luca's MCITP IFSP (April 14, 2026)</strong><br>
+        <strong>Pre-loaded from ${childName}'s ${PROGRAM_ABBR} IFSP (April 14, 2026)</strong><br>
         Concern areas and transition dates were parsed from the uploaded IFSP document.
       </div>
     </div>`;
@@ -1792,7 +1900,7 @@ function renderDetail() {
     html += `<div class="ifsp-source-bar">
       <div class="ifsp-source-icon">📋</div>
       <div class="ifsp-source-text">
-        <strong>Pre-loaded from Luca's IFSP transition plan</strong><br>
+        <strong>Pre-loaded from ${childName}'s ${PROGRAM_ABBR} transition plan</strong><br>
         Conference date, participants, and timeline below were extracted from the IFSP document.
       </div>
     </div>`;
@@ -1800,58 +1908,66 @@ function renderDetail() {
 
   // ── Main card
   html += `<div class="detail-card">
-    <div class="detail-step-num">Step ${step.num || '?'}</div>
-    <div class="detail-title">${step.label}</div>
-    <div class="detail-sub">${step.sub}</div>`;
+    <div class="detail-step-num">Step ${ds.num || '?'}</div>
+    <div class="detail-title">${ds.label}</div>
+    <div class="detail-sub">${ds.sub}</div>`;
 
-  if (step.deadline) {
+  if (ds.deadline) {
     html += `<div class="deadline-bar">
       <div class="deadline-icon">⏱</div>
-      <div class="deadline-text">${step.deadline.label}</div>
+      <div class="deadline-text">${ds.deadline.label}</div>
     </div>`;
   }
 
-  // School contact bar for send-request
-  if (id === 'send-request' && school) {
-    html += `<div class="school-contact-bar">
-      Sending to: <span class="sc-name">${school.name}</span>
-      <span style="color:#9B9086"> · </span>
-      <span class="sc-name">${school.coordinator}</span>
-      <span class="sc-role">, ${school.role}</span>
-    </div>`;
-  } else if (id === 'send-request' && !school) {
-    html += `<div class="school-contact-bar" style="border-color:#D97706; background:#FFF8E7;">
-      <span style="color:#92400E;">Select the receiving school in the header to auto-fill the email below.</span>
-    </div>`;
+  // Contact bar for send-request — DCPS vs MCPS
+  if (id === 'send-request') {
+    if (IS_DCPS) {
+      html += `<div class="dcps-contact-card">
+        <div class="dc-name">${DCPS_EARLY_STAGES.name}</div>
+        <div class="dc-detail">${DCPS_EARLY_STAGES.address} &nbsp;·&nbsp; ${DCPS_EARLY_STAGES.phone}</div>
+        <div class="dc-note">${DCPS_EARLY_STAGES.note}</div>
+      </div>`;
+    } else if (school) {
+      html += `<div class="school-contact-bar">
+        Sending to: <span class="sc-name">${school.name}</span>
+        <span style="color:#9B9086"> · </span>
+        <span class="sc-name">${school.coordinator}</span>
+        <span class="sc-role">, ${school.role}</span>
+      </div>`;
+    } else {
+      html += `<div class="school-contact-bar" style="border-color:#D97706; background:#FFF8E7;">
+        <span style="color:#92400E;">Select the receiving school in the header to auto-fill the email below.</span>
+      </div>`;
+    }
   }
 
-  if (step.what) {
+  if (ds.what) {
     html += `<div class="detail-section">
       <div class="detail-section-label">What this is</div>
-      <div class="detail-body">${step.what}</div>
+      <div class="detail-body">${ds.what}</div>
     </div>`;
   }
 
   // IFSP-specific concerns for the concerns step
   if (id === 'concerns') {
     html += `<div class="detail-section">
-      <div class="detail-section-label">Concern areas — from Luca's IFSP</div>
+      <div class="detail-section-label">Concern areas from ${childName}'s IFSP</div>
       <div class="concern-pills">
         ${IFSP.concerns.map(c => `<div class="concern-pill">${c}</div>`).join('')}
       </div>
     </div>`;
   }
 
-  if (step.why) {
+  if (ds.why) {
     html += `<div class="detail-section">
       <div class="detail-section-label">Why it matters</div>
-      <div class="detail-body">${step.why}</div>
+      <div class="detail-body">${ds.why}</div>
     </div>`;
   }
-  if (step.howTo) {
+  if (ds.howTo) {
     html += `<div class="detail-section">
       <div class="detail-section-label">What to do</div>
-      <div class="detail-body">${step.howTo}</div>
+      <div class="detail-body">${ds.howTo}</div>
     </div>`;
   }
 
@@ -1881,16 +1997,19 @@ function renderDetail() {
   // ── Email template card
   if (id === 'send-request') {
     const tmpl = getEmailTemplate();
+    const caption = IS_DCPS
+      ? `Pre-filled from ${childName}'s IFSP. Addressed to DCPS Early Stages.`
+      : `Pre-filled from ${childName}'s IFSP. Select a school above to auto-fill the recipient.`;
     html += `<div class="detail-card">
       <div class="detail-section-label" style="margin-bottom:4px">Email template</div>
-      <p style="font-size:11.5px;color:#9B9086;margin-bottom:10px">Pre-filled from Luca's IFSP. Select a school above to auto-fill the recipient.</p>
+      <p style="font-size:11.5px;color:#9B9086;margin-bottom:10px">${caption}</p>
       <pre id="emailTmpl" style="font-family:Georgia,serif;font-size:12.5px;line-height:1.75;color:#4A4A4A;white-space:pre-wrap;margin-bottom:12px;background:#FAFAF8;border-radius:8px;padding:12px;border:1px solid #E0D8CE">${tmpl}</pre>
       <button class="action-btn btn-ghost" id="copyEmailBtn">Copy email</button>
     </div>`;
   }
 
   if (id === 'request-iee') {
-    const ieeTemplate = `Dear [Special Education Director],\n\nI am requesting an Independent Educational Evaluation (IEE) at public expense for my child, ${CHILD} Martinez.\n\nI disagree with the evaluation recently conducted by MCPS because I do not believe it accurately reflects ${CHILD}'s abilities and needs.\n\nUnder IDEA 34 C.F.R. § 300.502, please provide a list of district-approved IEE evaluators and the process for funding the IEE.\n\nThank you,\nElena Martinez\n[Date]`;
+    const ieeTemplate = `Dear [Special Education Director],\n\nI am requesting an Independent Educational Evaluation (IEE) at public expense for my child, ${childName}.\n\nI disagree with the evaluation recently conducted by ${RECEIVING_AUTH} because I do not believe it accurately reflects ${childName}'s abilities and needs.\n\nUnder IDEA 34 C.F.R. § 300.502, please provide a list of district-approved IEE evaluators and the process for funding the IEE.\n\nThank you,\n${getParentFirstName()}\n[Date]`;
     html += `<div class="detail-card">
       <div class="detail-section-label" style="margin-bottom:10px">IEE request template</div>
       <pre style="font-family:Georgia,serif;font-size:12.5px;line-height:1.7;color:#4A4A4A;white-space:pre-wrap;margin-bottom:12px">${ieeTemplate}</pre>
@@ -1902,7 +2021,7 @@ function renderDetail() {
   if (id === 'eligibility-meeting') {
     const now = Date.now();
     html += `<div class="detail-card">
-      <div class="detail-section-label" style="margin-bottom:10px">Transition timeline — from Luca's IFSP</div>
+      <div class="detail-section-label" style="margin-bottom:10px">Transition timeline from ${childName}'s IFSP</div>
       <table class="ifsp-timeline">
         <thead>
           <tr>
@@ -1923,7 +2042,7 @@ function renderDetail() {
       </tr>`;
     }
     html += `</tbody></table>
-      <p style="font-size:11px;color:#9B9086;margin-top:10px;">Parsed from IFSP Transition Plan section, April 14, 2026. Source: MCITP.</p>
+      <p style="font-size:11px;color:#9B9086;margin-top:10px;">Parsed from IFSP Transition Plan section, April 14, 2026. Source: ${PROGRAM_ABBR}.</p>
     </div>`;
   }
 
