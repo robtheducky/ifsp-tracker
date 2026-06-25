@@ -148,6 +148,8 @@ body {
 .step-label.active { border-left: 2px solid #D97706; padding-left: 10px; }
 .step-name { font-size: 13px; font-weight: 600; color: #2F2F2F; line-height: 1.3; }
 .step-name.locked { color: #B0A898; font-weight: 500; }
+.step-done { color: #9B9086; }
+.step-done-check { vertical-align: -1px; margin-right: 1px; }
 .step-meta { font-size: 11px; color: #9B9086; margin-top: 1px; }
 .step-date {
   font-size: 10.5px; font-weight: 600; color: #5BA080;
@@ -954,10 +956,11 @@ const DCPS_EARLY_STAGES = {
 const STEP_DCPS_OVERRIDES = {
   'send-request': {
     label:    'Reach out to DCPS Early Stages',
-    sub:      'They coordinate all Part B evaluations in DC',
+    sub:      'Centralized office for all DC Part B transitions',
     what:     `DCPS Early Stages is the centralized office that manages all Part B special education evaluations and transition conferences for children transitioning from DCITP. Unlike Maryland, where each school has its own SPED team, all DC families go through Early Stages first. Individual school assignment comes after eligibility is determined.`,
     why:      `Contacting Early Stages early gets you on their radar and helps you understand the DC-specific timeline. The transition conference must happen before your child's third birthday, and Early Stages schedules it.`,
     howTo:    `Use the email template below. You can also call (202) 535-1500. Ask for confirmation that your DCITP service coordinator has already notified Early Stages of potential eligibility, and request information about scheduling the transition conference.`,
+    desc:     `Contact DCPS Early Stages to confirm your June 30 conference. Unlike Maryland, all DC families go through this centralized office first. Individual school assignment comes after eligibility.`,
     deadline: { label: 'Transition conference must be scheduled before the third birthday' },
   },
   'eligibility-meeting': {
@@ -1093,6 +1096,7 @@ const STEPS = [
     what: `Write down specific things you're seeing at home or hearing from teachers. Dates matter. "On April 3rd he couldn't..." is more useful than "he often struggles."`,
     why: `Your written observations become part of the official record. If the school later disputes that a problem exists, you want a dated log showing the pattern.`,
     howTo: `Keep a running note on your phone. One sentence per incident. Date, what happened, who was there. Don't filter. Write it all down and decide what's relevant later.`,
+    desc: `Write dated notes about what you're seeing at home. Your observations become part of the official record and are your strongest tool if the school later disputes a problem exists.`,
     deadline: null,
     loggable: true,
     ifspNote: `Luca's MCITP service coordinator, Patricia Chen, notified MCPS of his potential eligibility on March 1, 2026. The IFSP itself is the primary document of his developmental history and family concerns.`,
@@ -1114,6 +1118,7 @@ const STEPS = [
     what: `Send Luca's IFSP summary, BDI-3 results, and progress notes to MCPS with your signed consent. This is the packet Patricia Chen will help you prepare.`,
     why: `Without your records, MCPS starts from scratch. Your IFSP documents years of services, progress, and professional observations that should inform their evaluation.`,
     howTo: `Work with Patricia Chen to prepare the consent and document packet. Make sure BDI-3 scores, all three service providers' progress notes, and the transition plan are included.`,
+    desc: `Send Luca's IFSP summary, BDI-3 results, and progress notes to MCPS with your signed consent. Patricia Chen will help you prepare the packet.`,
     deadline: { label: 'Should be sent by May 2026 per IFSP transition plan' },
     loggable: true,
   },
@@ -1124,6 +1129,7 @@ const STEPS = [
     what: `MCPS completes its own Part B evaluation and sends you written reports. You have the right to receive these before any eligibility or IEP meeting.`,
     why: `If reports arrive at the meeting, you're being asked to make decisions on the spot. Request them at least 3-5 days in advance.`,
     howTo: `MCPS has until July-August per the transition plan. Once you have the reports: read them all, compare to Luca's IFSP scores, and write questions for anything that surprises you.`,
+    desc: `MCPS completes its own Part B evaluation and sends you written reports. Request them at least 3-5 days before any meeting so you're not reading them on the spot.`,
     deadline: { label: 'Request reports at least 5 days before any eligibility meeting' },
     loggable: true,
   },
@@ -1134,6 +1140,7 @@ const STEPS = [
     what: `The IEP team reviews Luca's evaluation results and decides whether he qualifies for Part B special education services. Patricia Chen, MCPS, and an eligibility specialist will attend.`,
     why: `The outcome here determines everything that follows. You don't have to agree to anything at this meeting. You can say "I'd like time to review" before signing anything.`,
     howTo: `Bring the IFSP and your notes. Ask the team to walk through each area before any eligibility decision. If you disagree with a finding, say so and ask them to note your disagreement in writing.`,
+    desc: `The IEP team reviews Luca's evaluation results and decides whether he qualifies for Part B services. You don't have to agree to anything at this meeting.`,
     deadline: { label: 'Scheduled: June 30, 2026 at 10:00 AM, virtual via Teams' },
     loggable: true,
     isBranch: true,
@@ -1151,6 +1158,7 @@ const BRANCH_STEPS = {
       what: `The IEP team writes Luca's Individualized Education Program: goals, services (what, how often, by whom), and placement. This document governs everything.`,
       why: `The IEP is a legal contract. Services not written in the IEP don't have to be provided.`,
       howTo: `Come with your own list of goals based on the IFSP outcomes. Push for specifics: not "speech therapy" but "speech therapy 2x/week 30 min with a licensed SLP." Ask that IFSP services inform the IEP starting point.`,
+      desc: `The team writes Luca's IEP: goals, services, and placement. Services not written in the IEP don't have to be provided.`,
       deadline: { label: 'IEP must be in place by October 3, 2026 (Luca\'s third birthday)' },
       loggable: true,
     },
@@ -1161,6 +1169,7 @@ const BRANCH_STEPS = {
       what: `You receive the draft IEP and either sign it (approving services), sign with written disagreement, or ask for changes before signing.`,
       why: `You don't have to sign at the meeting. You can take it home, review it, and respond in writing. Services are often less than what was discussed verbally.`,
       howTo: `Compare service hours to what was discussed. Check that goals are measurable and specific. Compare to IFSP service levels. Any significant reduction should be explained in writing.`,
+      desc: `You don't have to sign at the meeting. Take the draft home, verify that service hours match what was discussed, and confirm all goals are measurable.`,
       deadline: null,
       loggable: true,
     },
@@ -1171,6 +1180,7 @@ const BRANCH_STEPS = {
       what: `Services listed in the IEP must start no later than Luca's third birthday on October 3, 2026. Track whether they actually happen at the correct frequency.`,
       why: `Service delivery gaps are the most common compliance failure. Create a log from day one.`,
       howTo: `Log each session: date, service type, provider, duration. Check against the IEP monthly. If sessions are consistently missed, document and raise in writing.`,
+      desc: `Services must start no later than Luca's third birthday on October 3, 2026. Log each session from day one to catch any delivery gaps early.`,
       deadline: { label: 'Part C ends October 3, 2026. Part B must begin that day.' },
       loggable: true,
     },
@@ -1181,6 +1191,7 @@ const BRANCH_STEPS = {
       what: `30 days after services begin, review your log. Are sessions happening as written in the IEP?`,
       why: `Early gaps are easier to fix than gaps discovered at the annual review.`,
       howTo: `Compare your log to the IEP. If there are gaps, email the case manager with specific dates. Keep the tone factual and collaborative.`,
+      desc: `Check your log 30 days in. If sessions are being missed, email the case manager with specific dates.`,
       deadline: { label: '30 days after services start' },
       loggable: true,
     },
@@ -1191,6 +1202,7 @@ const BRANCH_STEPS = {
       what: `The IEP team meets at least annually to review progress on goals and update the IEP for the coming year.`,
       why: `This is your opportunity to add services, strengthen goals, and address what didn't work.`,
       howTo: `Before the meeting: review progress notes, your service log, and teacher reports. Prepare a written summary of what you've observed at home.`,
+      desc: `The IEP team meets at least annually to review progress and set new goals. Come prepared with what you've observed at home and what you want changed.`,
       deadline: { label: 'Must occur at least every 12 months' },
       loggable: true,
       isRepeat: true,
@@ -1205,6 +1217,7 @@ const BRANCH_STEPS = {
       what: `You have the right to an Independent Educational Evaluation (IEE) conducted by an evaluator not employed by the school district, at the district's expense.`,
       why: `School evaluators work for the school. An independent evaluator has no institutional interest. IEE results must be considered at the next eligibility meeting.`,
       howTo: `Send a written request immediately. The district must either fund the IEE or file for due process to defend their evaluation. Most districts comply.`,
+      desc: `You have the right to an independent evaluation at the district's expense. The district must fund it or file for due process to defend their evaluation.`,
       deadline: { label: 'District must respond to IEE request within ~10 school days' },
       loggable: true,
     },
@@ -1215,6 +1228,7 @@ const BRANCH_STEPS = {
       what: `The independent evaluator completes their assessment and sends a written report. This becomes part of Luca's educational record.`,
       why: `A strong IEE from an outside expert often carries significant weight. If it contradicts the school's evaluation, the team must explain why in writing.`,
       howTo: `Ask the IEE evaluator to attend the second eligibility meeting if possible. Their in-person testimony is more powerful than a written report alone.`,
+      desc: `The independent evaluator submits a written report that becomes part of Luca's educational record. Ask them to attend the second eligibility meeting if possible.`,
       deadline: null,
       loggable: true,
     },
@@ -1225,6 +1239,7 @@ const BRANCH_STEPS = {
       what: `The IEP team reconvenes with the IEE results and makes a new eligibility determination.`,
       why: `This meeting often goes differently. A strong IEE report combined with your documented observations frequently shifts the outcome.`,
       howTo: `Bring the IEE evaluator if possible. Highlight findings that contradict the school's evaluation. Ask the team to explain in writing any conclusions that differ from the IEE.`,
+      desc: `The IEP team reconvenes with the IEE results and makes a new determination. A strong independent evaluation combined with your documented observations frequently shifts the outcome.`,
       deadline: null,
       loggable: true,
       isBranch: true,
@@ -1241,6 +1256,7 @@ const BRANCH_STEPS = {
       what: `Two formal options: Mediation (neutral third party) or Due Process (hearing before an administrative law judge). Both are free to request.`,
       why: `Schools take mediation and due process requests seriously. Filing often prompts a settlement before the hearing date.`,
       howTo: `File with your state education agency. In Maryland: MSDE Office of Special Education. Typical statute of limitations: 2 years from the disputed decision.`,
+      desc: `File for mediation or due process with your state education agency. Schools take these requests seriously, and filing often prompts a settlement before any hearing date.`,
       deadline: { label: 'Typically 2-year statute of limitations from date of disputed decision' },
       loggable: true,
     },
@@ -1251,6 +1267,7 @@ const BRANCH_STEPS = {
       what: `A state complaint filed with MSDE alleging a procedural violation. Decision within 60 days.`,
       why: `State complaints are faster than due process and cost nothing. Especially effective when the school missed a legal deadline.`,
       howTo: `Document the specific procedural violation with dates. File with MSDE in Maryland. A state complaint and due process can run in parallel.`,
+      desc: `File a state complaint with MSDE for any procedural violation. Faster than due process, with a 60-day resolution requirement, and both can run in parallel.`,
       deadline: { label: 'State agency must resolve within 60 days of receiving complaint' },
       loggable: true,
     },
@@ -1264,6 +1281,7 @@ const BRANCH_STEPS = {
       what: `A 504 plan provides accommodations (extra time, preferential seating) but not specialized instruction or IEP goals.`,
       why: `If Luca's challenges are primarily about access rather than instruction, a 504 may be enough. If he needs active teaching support, push for IEP.`,
       howTo: `Ask for a 504 meeting. Be specific about what accommodations would help. Services like speech therapy and OT are typically IEP-only.`,
+      desc: `A 504 plan provides accommodations but not specialized instruction. If Luca needs active teaching support, an IEP is the stronger option.`,
       deadline: null,
       loggable: true,
     },
@@ -1274,6 +1292,7 @@ const BRANCH_STEPS = {
       what: `If Luca's needs change or new evidence emerges, you can request a new evaluation at any time. There is no mandatory waiting period.`,
       why: `Circumstances change. A new teacher, a new diagnosis, or documented evidence of continued struggle can all support a new evaluation request.`,
       howTo: `Keep your home observation log active. A new request with documented evidence from the past 6-12 months is much stronger.`,
+      desc: `You can request a new evaluation at any time. Documented home observations from the past 6-12 months make the request significantly stronger.`,
       deadline: null,
       loggable: false,
     },
@@ -1287,6 +1306,7 @@ const BRANCH_STEPS = {
       what: `The school offers a 504 plan. Review what accommodations are listed and whether they address Luca's actual needs.`,
       why: `504 plans vary wildly in quality. A vague plan is almost the same as no plan.`,
       howTo: `Ask: Is specialized instruction included? Are accommodations specific and measurable? Is there a person responsible for each? If the plan is vague, push back in writing.`,
+      desc: `Review what accommodations are listed and whether they address Luca's actual needs. A vague plan is almost the same as no plan.`,
       deadline: null,
       loggable: true,
       isBranch: true,
@@ -1302,6 +1322,7 @@ const BRANCH_STEPS = {
       what: `504 plans should be reviewed annually. Use this to add accommodations or re-evaluate whether an IEP is warranted.`,
       why: `Luca's needs will change. Annual reviews are your opportunity to strengthen the plan or transition to IEP if the 504 isn't enough.`,
       howTo: `Before the meeting: document what worked and what didn't. If struggles have increased, bring data and ask whether IEP eligibility should be re-evaluated.`,
+      desc: `504 plans must be reviewed annually. Use this to add accommodations or re-evaluate whether an IEP is warranted.`,
       deadline: { label: 'Must occur at least every 12 months' },
       loggable: true,
       isRepeat: true,
@@ -1776,8 +1797,8 @@ function renderStepRow(step, done, active, showLine, depth) {
         ${showLine ? `<div class="step-line ${lineCls}"></div>` : ''}
       </div>
       <div class="step-label ${labelCls}" style="margin-top:4px">
-        <div class="step-name ${nameCls}">
-          ${label}
+        <div class="step-name ${nameCls}${done ? ' step-done' : ''}">
+          ${done ? `<svg class="step-done-check" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ` : ''}${label}
           ${step.isRepeat ? `<span class="repeat-badge">repeating</span>` : ''}
         </div>
         <div class="step-meta">${sub}</div>
@@ -1967,7 +1988,7 @@ function renderDetail() {
 
   // Apply district-specific content overrides for display
   const ov = IS_DCPS && STEP_DCPS_OVERRIDES[id];
-  const ds = ov ? { ...step, ...ov } : step;  // ds = displayStep
+  let ds = ov ? { ...step, ...ov } : step;  // ds = displayStep
 
   const done = isDone(id);
   const date = getDate(id);
@@ -1977,6 +1998,19 @@ function renderDetail() {
   const childName = getChildName();
 
   let html = '';
+
+  // ── Dynamic desc for send-request
+  if (id === 'send-request') {
+    const days = daysUntil('2026-06-30');
+    const contact = IS_DCPS ? 'DCPS Early Stages' : 'the school SPED coordinator';
+    if (days > 0) {
+      ds = Object.assign({}, ds, { desc: `Reach out to ${contact} before the June 30 transition conference. Select a school above to auto-fill the email, then send it from your personal email. Keep the tone warm.` });
+    } else if (days === 0) {
+      ds = Object.assign({}, ds, { desc: `The transition conference is today. Make sure ${contact} knows you're attending and that you have what you need.` });
+    } else {
+      ds = Object.assign({}, ds, { desc: `The June 30 conference has passed. Follow up with ${contact} on next steps.` });
+    }
+  }
 
   // ── Urgency banner for send-request
   if (id === 'send-request') {
@@ -2049,10 +2083,9 @@ function renderDetail() {
     }
   }
 
-  if (ds.what) {
+  if (ds.desc) {
     html += `<div class="detail-section">
-      <div class="detail-section-label">What this is</div>
-      <div class="detail-body">${ds.what}</div>
+      <div class="detail-body" style="font-size:14px;line-height:1.65">${ds.desc}</div>
     </div>`;
   }
 
@@ -2063,19 +2096,6 @@ function renderDetail() {
       <div class="concern-pills">
         ${IFSP.concerns.map(c => `<div class="concern-pill">${c}</div>`).join('')}
       </div>
-    </div>`;
-  }
-
-  if (ds.why) {
-    html += `<div class="detail-section">
-      <div class="detail-section-label">Why it matters</div>
-      <div class="detail-body">${ds.why}</div>
-    </div>`;
-  }
-  if (ds.howTo) {
-    html += `<div class="detail-section">
-      <div class="detail-section-label">What to do</div>
-      <div class="detail-body">${ds.howTo}</div>
     </div>`;
   }
 
