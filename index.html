@@ -342,9 +342,213 @@ body {
 }
 .school-contact-bar .sc-name { font-weight: 700; color: #2F2F2F; }
 .school-contact-bar .sc-role { color: #9B9086; font-size: 11.5px; }
+
+/* ── Onboarding overlay ── */
+.onboarding-overlay {
+  position: fixed; inset: 0; background: rgba(26,35,50,0.9);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px;
+}
+.onboarding-overlay.hidden { display: none; }
+.onboarding-card {
+  background: white; border-radius: 20px; padding: 40px;
+  max-width: 460px; width: 100%; box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+}
+.ob-logo { font-size: 20px; font-weight: 800; color: #D97706; margin-bottom: 12px; letter-spacing: -0.3px; }
+.onboarding-card h1 { font-size: 22px; font-weight: 800; color: #1A2332; margin-bottom: 8px; line-height: 1.25; }
+.onboarding-card > p { font-size: 13.5px; color: #6B6B6B; line-height: 1.6; margin-bottom: 24px; }
+.ob-field { margin-bottom: 14px; }
+.ob-field label { display: block; font-size: 11px; font-weight: 700; color: #4A4A4A; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.06em; }
+.ob-field input {
+  width: 100%; padding: 10px 14px; border: 1px solid #E0D8CE;
+  border-radius: 10px; font-size: 14px; outline: none; transition: border-color 0.15s;
+  font-family: inherit; color: #2F2F2F;
+}
+.ob-field input:focus { border-color: #D97706; box-shadow: 0 0 0 3px rgba(217,119,6,0.1); }
+.ob-actions { margin-top: 24px; }
+.ob-skip { font-size: 12px; color: #B0A898; text-align: center; cursor: pointer; padding: 8px; margin-top: 6px; }
+.ob-skip:hover { color: #6B6B6B; }
+
+/* ── Drawer backdrop ── */
+.drawer-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.22);
+  z-index: 200; display: none;
+}
+.drawer-backdrop.active { display: block; }
+
+/* ── Reminders drawer ── */
+.reminders-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 380px;
+  background: white; border-left: 1px solid #E0D8CE;
+  z-index: 201; display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform 0.25s ease;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+.reminders-drawer.open { transform: translateX(0); }
+.reminders-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.15); flex-shrink: 0;
+  background: #1A2332;
+}
+.reminders-hdr-title { font-size: 14px; font-weight: 800; color: white; }
+.reminders-close {
+  background: rgba(255,255,255,0.1); border: none; cursor: pointer;
+  color: white; padding: 5px 9px; border-radius: 7px; font-size: 14px; line-height: 1;
+}
+.reminders-close:hover { background: rgba(255,255,255,0.2); }
+.reminders-info-bar {
+  padding: 10px 20px; background: #F0F9FF; border-bottom: 1px solid #BAE0FF;
+  font-size: 12px; color: #0C4A6E; flex-shrink: 0; line-height: 1.5;
+}
+.reminders-list { padding: 14px 16px; flex: 1; overflow-y: auto; }
+
+/* ── Reminder item ── */
+.reminder-item {
+  border: 1px solid #E0D8CE; border-radius: 12px; padding: 14px 16px;
+  margin-bottom: 10px; background: white;
+}
+.reminder-item-top { display: flex; align-items: flex-start; gap: 10px; }
+.reminder-status-dot {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 3px;
+}
+.reminder-status-dot.sent     { background: #5BA080; }
+.reminder-status-dot.upcoming { background: #D97706; }
+.reminder-status-dot.pending  { background: #C0B8B0; }
+.reminder-item-body { flex: 1; }
+.reminder-item-title { font-size: 13px; font-weight: 700; color: #2F2F2F; margin-bottom: 2px; }
+.reminder-item-when { font-size: 11.5px; color: #9B9086; line-height: 1.4; }
+.reminder-item-bottom {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px;
+  padding-top: 10px; border-top: 1px solid #F5F0E8;
+}
+.reminder-status-label { font-size: 11px; font-weight: 700; flex: 1; }
+.status-sent     { color: #5BA080; }
+.status-upcoming { color: #D97706; }
+.status-pending  { color: #9B9086; }
+.reminder-preview-btn {
+  font-size: 11.5px; padding: 5px 12px; border-radius: 7px;
+  border: 1px solid #E0D8CE; background: white; cursor: pointer;
+  color: #4A4A4A; font-family: inherit; transition: all 0.12s;
+}
+.reminder-preview-btn:hover { background: #FFFBF0; border-color: #D97706; color: #92400E; }
+
+/* ── Toggle switch ── */
+.toggle-switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; cursor: pointer; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-slider {
+  position: absolute; inset: 0; background: #E0D8CE;
+  border-radius: 20px; transition: background 0.18s;
+}
+.toggle-slider:before {
+  content: ''; position: absolute;
+  height: 14px; width: 14px; left: 3px; bottom: 3px;
+  background: white; border-radius: 50%; transition: transform 0.18s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-switch input:checked + .toggle-slider { background: #D97706; }
+.toggle-switch input:checked + .toggle-slider:before { transform: translateX(16px); }
+
+/* ── Bell button ── */
+.bell-btn {
+  flex-shrink: 0; position: relative;
+  background: none; border: 1px solid #E0D8CE;
+  border-radius: 10px; padding: 8px 12px; cursor: pointer;
+  font-size: 15px; transition: background 0.15s, border-color 0.15s;
+  line-height: 1;
+}
+.bell-btn:hover { background: #FEF9F0; border-color: #D97706; }
+.bell-badge {
+  position: absolute; top: -6px; right: -6px;
+  background: #D97706; color: white; font-size: 9px; font-weight: 800;
+  border-radius: 10px; padding: 2px 5px; min-width: 17px; text-align: center;
+  border: 2px solid white; line-height: 1.3;
+}
+
+/* ── Email preview modal ── */
+.email-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  z-index: 400; display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.email-modal-backdrop.active { display: flex; }
+.email-modal {
+  background: white; border-radius: 16px; max-width: 560px; width: 100%;
+  max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.28);
+}
+.email-modal-chrome {
+  background: #EFECE7; border-radius: 16px 16px 0 0;
+  padding: 14px 18px; border-bottom: 1px solid #E0D8CE; position: sticky; top: 0; z-index: 1;
+}
+.email-modal-dots { display: flex; gap: 6px; margin-bottom: 12px; }
+.email-modal-dot { width: 12px; height: 12px; border-radius: 50%; }
+.email-modal-dot.red    { background: #FF5F57; }
+.email-modal-dot.yellow { background: #FFBD2E; }
+.email-modal-dot.green  { background: #28C840; }
+.email-field { display: flex; gap: 10px; align-items: baseline; margin-bottom: 5px; font-size: 12.5px; }
+.email-field-label { font-size: 10.5px; font-weight: 700; color: #9B9086; min-width: 50px; text-align: right; text-transform: uppercase; letter-spacing: 0.04em; }
+.email-field-val { color: #2F2F2F; line-height: 1.4; }
+.email-modal-body { padding: 18px 22px; }
+.email-auto-banner {
+  background: #FFFBF0; border: 1px solid #F0D090;
+  border-radius: 8px; padding: 9px 13px; font-size: 12px; color: #7B4010;
+  margin-bottom: 16px; line-height: 1.5;
+}
+.email-body-text {
+  font-family: Georgia, serif; font-size: 13.5px; line-height: 1.85; color: #2F2F2F;
+  white-space: pre-wrap;
+}
+.email-modal-footer { padding: 14px 22px; border-top: 1px solid #E0D8CE; text-align: right; }
 </style>
 </head>
 <body>
+
+<!-- Onboarding overlay — shown on first visit -->
+<div class="onboarding-overlay" id="onboardingOverlay">
+  <div class="onboarding-card">
+    <div class="ob-logo">slingshot</div>
+    <h1>Let's build your transition roadmap.</h1>
+    <p>Tell us a bit about your child and we'll personalize every step, pre-fill documents, and send you reminders at exactly the right moment.</p>
+    <div class="ob-field">
+      <label>Child's first name</label>
+      <input id="ob-name" type="text" placeholder="e.g. Luca" value="Luca" autocomplete="off">
+    </div>
+    <div class="ob-field">
+      <label>Child's date of birth</label>
+      <input id="ob-dob" type="date" value="2023-10-03">
+    </div>
+    <div class="ob-field">
+      <label>Your first name</label>
+      <input id="ob-parent-name" type="text" placeholder="e.g. Elena" value="Elena" autocomplete="off">
+    </div>
+    <div class="ob-field">
+      <label>Your email address</label>
+      <input id="ob-email" type="email" placeholder="you@email.com" value="elena.martinez@gmail.com">
+    </div>
+    <div class="ob-actions">
+      <button class="action-btn btn-primary" onclick="completeOnboarding()" style="width:100%;justify-content:center;font-size:14px;padding:12px 18px;">Start my roadmap</button>
+    </div>
+    <div class="ob-skip" onclick="skipOnboarding()">Skip for now</div>
+  </div>
+</div>
+
+<!-- Reminders drawer backdrop -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeRemindersDrawer()"></div>
+
+<!-- Reminders drawer -->
+<div class="reminders-drawer" id="remindersDrawer">
+  <div class="reminders-hdr">
+    <span class="reminders-hdr-title">Your reminders</span>
+    <button class="reminders-close" onclick="closeRemindersDrawer()">✕</button>
+  </div>
+  <div class="reminders-info-bar" id="remindersInfo">In the live app, these send automatically to your email address.</div>
+  <div class="reminders-list" id="remindersList"></div>
+</div>
+
+<!-- Email preview modal -->
+<div class="email-modal-backdrop" id="emailModalBackdrop" onclick="closeEmailPreview()">
+  <div class="email-modal" id="emailModal" onclick="event.stopPropagation()"></div>
+</div>
 
 <header class="hdr">
   <div class="hdr-left">
@@ -377,9 +581,12 @@ body {
   </div>
   <div class="progress-deadline">
     <div class="progress-deadline-label">Hard deadline</div>
-    <div class="progress-deadline-date">Oct 3, 2026</div>
+    <div class="progress-deadline-date" id="deadlineDate">Oct 3, 2026</div>
     <div class="progress-deadline-days" id="deadlineDays">...</div>
   </div>
+  <button class="bell-btn" id="bellBtn" onclick="openRemindersDrawer()" title="Reminders">
+    🔔<span class="bell-badge" id="bellBadge">4</span>
+  </button>
   <button class="journey-toggle-btn pulsing" id="journeyToggleBtn" onclick="toggleMap()">
     See your full roadmap
   </button>
@@ -623,6 +830,103 @@ const BRANCH_COLORS = {
   'accept-504':          { icon: '~', cls: 'grey',   label: 'Accept the 504 plan' },
   'push-for-iep':        { icon: '↑', cls: 'orange', label: 'Push for IEP instead' },
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REMINDER DEFINITIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const REMINDER_DEFS = [
+  {
+    id: 'pre-conference',
+    title: 'Transition conference prep',
+    whenText: '14 days before the June 30 conference',
+    status: 'sent',
+    statusLabel: 'Sent Jun 16, 2026',
+    defaultOn: true,
+    getSubject: (name) => `Getting ready for ${name}'s June 30 transition conference`,
+    getBody: (name, firstName) => `Hi ${firstName},
+
+${name}'s transition conference is in 14 days on June 30 at 10:00 AM. Here's what to do now to walk in prepared:
+
+1. Request the evaluation reports from MCPS at least 3 days before the meeting. You have the right to receive them in advance.
+
+2. Write down your own observations. What are you seeing at home? What does ${name} love? What is hard for them? Specific and dated examples matter.
+
+3. Bring ${name}'s IFSP and the most recent BDI-3 results.
+
+4. You do not have to agree to anything at the meeting. "I'd like time to review" is a complete sentence.
+
+You've got this.
+
+The Slingshot Team`,
+  },
+  {
+    id: 'eval-followup',
+    title: 'Follow up on your school outreach',
+    whenText: '10 school days after Step 2 is logged with no response',
+    status: 'pending',
+    statusLabel: 'Triggers after Step 2 is logged',
+    defaultOn: true,
+    getSubject: (name) => `Following up on ${name}'s transition outreach`,
+    getBody: (name, firstName) => `Hi ${firstName},
+
+It's been 10 school days since you reached out to the school about ${name}'s transition. If you haven't heard back yet, now is a good time to follow up.
+
+A simple reply to your original email works well: "Just following up on my email below. We want to make sure we are connected with the right person ahead of the June 30 conference."
+
+If you're getting no response at all, you can call the main school office and ask to be connected with the SPED coordinator directly.
+
+Schools get busy. One follow-up is completely reasonable.
+
+The Slingshot Team`,
+  },
+  {
+    id: 'birthday-30',
+    title: 'IEP must be in place: 30-day check',
+    whenText: '30 days before the third birthday',
+    status: 'upcoming',
+    statusLabel: 'Scheduled for Sep 3, 2026',
+    defaultOn: true,
+    getSubject: (name) => `${name}'s IEP must be in place in 30 days`,
+    getBody: (name, firstName) => `Hi ${firstName},
+
+${name}'s third birthday is in 30 days on October 3, 2026. Under IDEA, Part C early intervention services end on that date and Part B services must begin.
+
+If an IEP is not signed and in place by October 3, there will be a gap in services.
+
+What to check right now:
+- If the IEP meeting hasn't been scheduled yet, contact MCPS today and request a date in writing.
+- If the meeting is already scheduled, confirm it is early enough to leave time for revisions before signing.
+- If you've already signed the IEP, make sure you have a copy and that services are calendared to start on time.
+
+Don't let this deadline sneak up. You are your child's best advocate.
+
+The Slingshot Team`,
+  },
+  {
+    id: 'inactivity',
+    title: 'Check in on your progress',
+    whenText: '30 days with no updates logged',
+    status: 'upcoming',
+    statusLabel: 'Sends if no activity logged by Jul 25',
+    defaultOn: true,
+    getSubject: (name) => `Quick check-in on ${name}'s transition`,
+    getBody: (name, firstName) => `Hi ${firstName},
+
+It's been a while since you've logged any updates for ${name}'s IFSP transition. We just want to check in.
+
+Sometimes no news is good news, and things are moving along fine. But sometimes a deadline is quietly approaching.
+
+A few things worth confirming:
+- Have you heard back from the school since your outreach?
+- Do you have the evaluation reports in hand?
+- Is the eligibility meeting still on the calendar for June 30?
+
+If you've hit a roadblock or have questions, Slingshot is here to help you navigate.
+
+The Slingshot Team`,
+  },
+];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STEP DEFINITIONS
@@ -921,6 +1225,12 @@ function defaultState() {
     selectedSchool: null,
     mapOpen: false,
     hasSeenMap: false,
+    onboardingComplete: false,
+    childName: '',
+    parentFirstName: '',
+    parentEmail: '',
+    thirdBirthday: '',
+    remindersEnabled: { 'pre-conference': true, 'eval-followup': true, 'birthday-30': true, 'inactivity': true },
   };
 }
 
@@ -981,6 +1291,201 @@ function getAllStepDefs() {
     for (const s of BRANCH_STEPS[key]) all[s.id] = s;
   }
   return all;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DYNAMIC NAME / DATE HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function getChildName()       { return state.childName       || CHILD; }
+function getParentFirstName() { return state.parentFirstName || 'Elena'; }
+function getParentEmail()     { return state.parentEmail     || ''; }
+function getThirdBirthday()   { return state.thirdBirthday   || IFSP.thirdBirthday; }
+
+function dobToThirdBirthday(dobStr) {
+  const d = new Date(dobStr + 'T12:00:00');
+  d.setFullYear(d.getFullYear() + 3);
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function dobToDeadlineISO(dobStr) {
+  const d = new Date(dobStr + 'T12:00:00');
+  d.setFullYear(d.getFullYear() + 3);
+  return d.toISOString().split('T')[0];
+}
+
+function updateDynamicUI() {
+  const name  = getChildName();
+  const bday  = getThirdBirthday();
+  const el = (id) => document.getElementById(id);
+  if (el('childNameHdr'))  el('childNameHdr').textContent  = name;
+  if (el('progressTitle')) el('progressTitle').textContent = `${name}'s IFSP transition`;
+  if (el('deadlineDate'))  el('deadlineDate').textContent  = bday;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ONBOARDING
+// ─────────────────────────────────────────────────────────────────────────────
+
+function initOnboarding() {
+  if (state.onboardingComplete) {
+    document.getElementById('onboardingOverlay').classList.add('hidden');
+    updateDynamicUI();
+  }
+}
+
+function completeOnboarding() {
+  const nameVal       = document.getElementById('ob-name').value.trim();
+  const dobVal        = document.getElementById('ob-dob').value;
+  const parentNameVal = document.getElementById('ob-parent-name').value.trim();
+  const emailVal      = document.getElementById('ob-email').value.trim();
+
+  if (!nameVal) { document.getElementById('ob-name').focus(); return; }
+
+  state.childName       = nameVal;
+  state.parentFirstName = parentNameVal || nameVal;
+  state.parentEmail     = emailVal;
+  state.thirdBirthday   = dobVal ? dobToThirdBirthday(dobVal) : IFSP.thirdBirthday;
+  state.onboardingComplete = true;
+  saveState();
+
+  document.getElementById('onboardingOverlay').classList.add('hidden');
+  updateDynamicUI();
+  updatePathLabel();
+}
+
+function skipOnboarding() {
+  const nameVal = document.getElementById('ob-name').value.trim();
+  const dobVal  = document.getElementById('ob-dob').value;
+  state.childName       = nameVal || CHILD;
+  state.parentFirstName = document.getElementById('ob-parent-name').value.trim() || 'Elena';
+  state.parentEmail     = document.getElementById('ob-email').value.trim();
+  state.thirdBirthday   = dobVal ? dobToThirdBirthday(dobVal) : IFSP.thirdBirthday;
+  state.onboardingComplete = true;
+  saveState();
+  document.getElementById('onboardingOverlay').classList.add('hidden');
+  updateDynamicUI();
+  updatePathLabel();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REMINDERS DRAWER
+// ─────────────────────────────────────────────────────────────────────────────
+
+function openRemindersDrawer() {
+  renderRemindersDrawer();
+  document.getElementById('remindersDrawer').classList.add('open');
+  document.getElementById('drawerBackdrop').classList.add('active');
+}
+
+function closeRemindersDrawer() {
+  document.getElementById('remindersDrawer').classList.remove('open');
+  document.getElementById('drawerBackdrop').classList.remove('active');
+}
+
+function renderRemindersDrawer() {
+  const email = getParentEmail();
+  const infoEl = document.getElementById('remindersInfo');
+  if (infoEl) {
+    infoEl.textContent = email
+      ? `In the live app, these send automatically to ${email}.`
+      : 'In the live app, these send automatically to your email address.';
+  }
+
+  const name = getChildName();
+  let html = '';
+  for (const def of REMINDER_DEFS) {
+    const enabled  = state.remindersEnabled ? state.remindersEnabled[def.id] !== false : true;
+    const dotCls   = def.status === 'sent' ? 'sent' : def.status === 'upcoming' ? 'upcoming' : 'pending';
+    const labelCls = def.status === 'sent' ? 'status-sent' : def.status === 'upcoming' ? 'status-upcoming' : 'status-pending';
+
+    html += `<div class="reminder-item">
+      <div class="reminder-item-top">
+        <div class="reminder-status-dot ${dotCls}"></div>
+        <div class="reminder-item-body">
+          <div class="reminder-item-title">${def.title}</div>
+          <div class="reminder-item-when">${def.whenText}</div>
+        </div>
+        <label class="toggle-switch" title="${enabled ? 'On' : 'Off'}">
+          <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleReminder('${def.id}', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="reminder-item-bottom">
+        <span class="reminder-status-label ${labelCls}">${def.statusLabel}</span>
+        <button class="reminder-preview-btn" onclick="openEmailPreview('${def.id}')">Preview email</button>
+      </div>
+    </div>`;
+  }
+
+  const listEl = document.getElementById('remindersList');
+  if (listEl) listEl.innerHTML = html;
+}
+
+function toggleReminder(id, checked) {
+  if (!state.remindersEnabled) state.remindersEnabled = {};
+  state.remindersEnabled[id] = checked;
+  saveState();
+  updateBellBadge();
+}
+
+function updateBellBadge() {
+  const activeCount = REMINDER_DEFS.filter(d => {
+    const on = state.remindersEnabled ? state.remindersEnabled[d.id] !== false : true;
+    return on && d.status !== 'pending';
+  }).length;
+  const badge = document.getElementById('bellBadge');
+  if (badge) badge.textContent = activeCount;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EMAIL PREVIEW MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+
+function openEmailPreview(reminderId) {
+  const def = REMINDER_DEFS.find(d => d.id === reminderId);
+  if (!def) return;
+
+  const name      = getChildName();
+  const firstName = getParentFirstName();
+  const email     = getParentEmail();
+  const toAddr    = email || 'your email address';
+  const subject   = def.getSubject(name);
+  const body      = def.getBody(name, firstName);
+
+  document.getElementById('emailModal').innerHTML = `
+    <div class="email-modal-chrome">
+      <div class="email-modal-dots">
+        <div class="email-modal-dot red"></div>
+        <div class="email-modal-dot yellow"></div>
+        <div class="email-modal-dot green"></div>
+      </div>
+      <div class="email-field">
+        <span class="email-field-label">From</span>
+        <span class="email-field-val">Slingshot Reminders &lt;reminders@slingshot.care&gt;</span>
+      </div>
+      <div class="email-field">
+        <span class="email-field-label">To</span>
+        <span class="email-field-val">${toAddr}</span>
+      </div>
+      <div class="email-field">
+        <span class="email-field-label">Subject</span>
+        <span class="email-field-val" style="font-weight:600">${subject}</span>
+      </div>
+    </div>
+    <div class="email-modal-body">
+      <div class="email-auto-banner">In the live app, this email sends automatically when the trigger fires. No action needed from you.</div>
+      <div class="email-body-text">${body}</div>
+    </div>
+    <div class="email-modal-footer">
+      <button class="action-btn btn-ghost" onclick="closeEmailPreview()">Close</button>
+    </div>`;
+
+  document.getElementById('emailModalBackdrop').classList.add('active');
+}
+
+function closeEmailPreview() {
+  document.getElementById('emailModalBackdrop').classList.remove('active');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1187,12 +1692,19 @@ function updatePathLabel() {
     anchorEl.style.color = '#5BA080';
   }
 
-  // Hard deadline countdown
-  const days = daysUntil('2026-10-03');
+  // Hard deadline countdown — use third birthday from state if available
+  const bday = getThirdBirthday();
+  const deadlineDateEl = document.getElementById('deadlineDate');
+  if (deadlineDateEl) deadlineDateEl.textContent = bday;
+  const days = daysUntil(bday);
   const deadlineEl = document.getElementById('deadlineDays');
   if (days > 0) deadlineEl.textContent = `${days} days away`;
   else if (days === 0) deadlineEl.textContent = 'Today';
   else deadlineEl.textContent = `${Math.abs(days)} days ago`;
+
+  // Dynamic names + bell badge
+  updateDynamicUI();
+  updateBellBadge();
 
   // Toggle button label
   const btn = document.getElementById('journeyToggleBtn');
@@ -1528,6 +2040,9 @@ function addResetButton() {
       document.getElementById('mapPanel').classList.add('hidden');
       const toggleBtn = document.getElementById('journeyToggleBtn');
       if (toggleBtn) { toggleBtn.classList.remove('map-open'); toggleBtn.classList.add('pulsing'); }
+      closeRemindersDrawer();
+      closeEmailPreview();
+      document.getElementById('onboardingOverlay').classList.remove('hidden');
       renderMap();
       renderDetail();
       updatePathLabel();
@@ -1542,6 +2057,7 @@ function addResetButton() {
 
 addResetButton();
 initSchoolPicker();
+initOnboarding();
 // Restore map panel visibility from saved state
 if (state.mapOpen) {
   document.getElementById('mapPanel').classList.remove('hidden');
