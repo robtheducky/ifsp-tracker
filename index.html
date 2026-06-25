@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slingshot — IFSP Transition Tracker</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  font-size: 14px;
+  background: #F5F0E8;
+  color: #2F2F2F;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.hdr {
+  background: #1A2332;
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.hdr-left { flex-shrink: 0; }
+.hdr-logo { font-size: 17px; font-weight: 800; color: #D97706; letter-spacing: -0.3px; }
+.hdr-sub  { font-size: 9px; font-weight: 600; color: #9FB7C8; text-transform: uppercase; letter-spacing: 0.1em; }
+.hdr-school { flex: 1; min-width: 200px; }
+.school-select {
+  width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  color: white; border-radius: 8px; padding: 6px 10px;
+  font-size: 12px; cursor: pointer; outline: none;
+}
+.school-select option { background: #1A2332; color: white; }
+.school-select:focus { border-color: #D97706; }
+.hdr-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.hdr-child { font-size: 12px; color: #9FB7C8; }
+.hdr-child strong { color: white; }
+
+/* ── Progress strip ── */
+.progress-strip {
+  background: white; border-bottom: 1px solid #E0D8CE;
+  padding: 12px 24px; display: flex; align-items: center;
+  gap: 20px; flex-shrink: 0;
+}
+.progress-meta { flex-shrink: 0; min-width: 200px; }
+.progress-title {
+  font-size: 13px; font-weight: 700; color: #2F2F2F; margin-bottom: 2px;
+}
+.progress-anchor { font-size: 11.5px; color: #5BA080; }
+.progress-bar-wrap { flex: 1; }
+.progress-bar-track {
+  height: 8px; background: #F0EBE3; border-radius: 20px; overflow: hidden;
+  margin-bottom: 4px;
+}
+.progress-bar-fill {
+  height: 100%; background: linear-gradient(to right, #5BA080, #6FCF97);
+  border-radius: 20px; transition: width 0.4s ease;
+}
+.progress-bar-labels {
+  display: flex; justify-content: space-between;
+  font-size: 10.5px; color: #9B9086; font-weight: 600;
+}
+.progress-deadline {
+  flex-shrink: 0; text-align: center; padding: 6px 14px;
+  background: #FEF9F0; border: 1px solid #F0D090;
+  border-radius: 10px;
+}
+.progress-deadline-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9B9086; }
+.progress-deadline-date  { font-size: 13px; font-weight: 800; color: #D97706; }
+.progress-deadline-days  { font-size: 10px; color: #B45309; }
+
+/* ── Journey map toggle ── */
+.journey-toggle-btn {
+  flex-shrink: 0; display: flex; align-items: center; gap: 7px;
+  background: #D97706; color: white; border: none;
+  border-radius: 10px; padding: 9px 16px; font-size: 13px;
+  font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.journey-toggle-btn:hover { background: #B45309; }
+.journey-toggle-btn.map-open { background: #F5F0E8; color: #6B6B6B; border: 1px solid #E0D8CE; }
+.journey-toggle-btn.map-open:hover { background: #EDE7DB; }
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(217,119,6,0.55); }
+  70%  { box-shadow: 0 0 0 10px rgba(217,119,6,0); }
+  100% { box-shadow: 0 0 0 0 rgba(217,119,6,0); }
+}
+.journey-toggle-btn.pulsing {
+  animation: pulse-ring 1.4s ease-out 4;
+}
+
+/* ── Body / panels ── */
+.body { display: flex; flex: 1; overflow: hidden; }
+
+.map {
+  width: 320px; flex-shrink: 0;
+  background: white; border-right: 1px solid #E0D8CE;
+  overflow-y: auto; padding: 16px 0 40px;
+  transition: width 0.25s ease, opacity 0.2s ease;
+}
+.map.hidden { width: 0; opacity: 0; overflow: hidden; pointer-events: none; padding: 0; }
+
+.map-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: #9FB7C8; padding: 0 16px 12px;
+}
+
+.step-row {
+  display: flex; align-items: flex-start; gap: 0;
+  cursor: pointer; padding: 0; position: relative;
+}
+.step-row:hover .step-label { background: #FEF9F0; }
+.step-row.active .step-label { background: #FFFBF0; }
+
+.step-gutter {
+  width: 40px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center;
+  padding-top: 10px;
+}
+.step-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid #D5CAB8; background: white;
+  flex-shrink: 0; z-index: 1; transition: all 0.15s;
+}
+.step-dot.done   { background: #5BA080; border-color: #5BA080; }
+.step-dot.ifsp-done { background: #D97706; border-color: #D97706; }
+.step-dot.active { background: #D97706; border-color: #D97706; box-shadow: 0 0 0 3px rgba(217,119,6,0.2); }
+.step-dot.scheduled { background: white; border-color: #D97706; }
+.step-dot.locked { background: #F0EBE3; border-color: #E0D8CE; }
+.step-dot.branch-point { border-radius: 3px; transform: rotate(45deg); width: 12px; height: 12px; }
+
+.step-line { width: 2px; background: #E0D8CE; flex: 1; min-height: 4px; }
+.step-line.done { background: #5BA080; }
+.step-line.ifsp-done { background: #D97706; }
+
+.step-label {
+  flex: 1; padding: 8px 12px 8px 4px;
+  border-radius: 8px; margin: 4px 8px 4px 0;
+  transition: background 0.1s;
+}
+.step-label.active { border-left: 2px solid #D97706; padding-left: 10px; }
+.step-name { font-size: 13px; font-weight: 600; color: #2F2F2F; line-height: 1.3; }
+.step-name.locked { color: #B0A898; font-weight: 500; }
+.step-meta { font-size: 11px; color: #9B9086; margin-top: 1px; }
+.step-date {
+  font-size: 10.5px; font-weight: 600; color: #5BA080;
+  background: #F0FAF5; border-radius: 4px; padding: 1px 5px;
+  display: inline-block; margin-top: 2px;
+}
+.step-date-ifsp {
+  font-size: 10.5px; font-weight: 600; color: #92400E;
+  background: #FEF3C7; border-radius: 4px; padding: 1px 5px;
+  display: inline-block; margin-top: 2px;
+}
+.step-date-scheduled {
+  font-size: 10.5px; font-weight: 600; color: #B45309;
+  background: #FFF8E7; border: 1px dashed #D97706; border-radius: 4px; padding: 1px 5px;
+  display: inline-block; margin-top: 2px;
+}
+.step-overdue {
+  font-size: 10.5px; font-weight: 600; color: #C0655A;
+  background: #FFF5F4; border-radius: 4px; padding: 1px 5px;
+  display: inline-block; margin-top: 2px;
+}
+
+.branch-container { padding-left: 40px; }
+.branch-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #B0A898; padding: 6px 8px 4px;
+}
+.branch-option {
+  display: flex; align-items: flex-start; gap: 0;
+  opacity: 0.45; cursor: pointer; transition: opacity 0.15s; position: relative;
+}
+.branch-option:hover { opacity: 0.75; }
+.branch-option.chosen { opacity: 1; }
+.branch-option.unchosen { opacity: 0.28; }
+.branch-option.unchosen:hover { opacity: 0.5; }
+
+.branch-gutter {
+  width: 28px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; padding-top: 10px;
+}
+.branch-spine { position: absolute; left: 14px; top: 0; bottom: 0; width: 2px; background: #E0D8CE; }
+.branch-tab {
+  display: flex; align-items: center; gap: 8px;
+  flex: 1; padding: 5px 8px 5px 4px;
+  border-radius: 6px; margin: 2px 8px 2px 0; transition: background 0.1s;
+}
+.branch-option.chosen .branch-tab { background: #FFFBF0; }
+.branch-option:hover .branch-tab { background: #F8F4EE; }
+.branch-icon {
+  width: 18px; height: 18px; border-radius: 50%;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px;
+}
+.branch-icon.green  { background: #D1FAE5; color: #065F46; }
+.branch-icon.orange { background: #FEF3C7; color: #92400E; }
+.branch-icon.grey   { background: #F3F4F6; color: #6B7280; }
+.branch-icon.blue   { background: #DBEAFE; color: #1D4ED8; }
+.branch-icon.red    { background: #FEE2E2; color: #991B1B; }
+.branch-name { font-size: 12px; font-weight: 600; color: #2F2F2F; }
+.sub-steps { padding-left: 28px; }
+
+.repeat-badge {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #9FB7C8;
+  background: #EFF6FF; border: 1px solid #DBEAFE;
+  border-radius: 10px; padding: 1px 6px; margin-left: 4px; vertical-align: middle;
+}
+
+.detail { flex: 1; overflow-y: auto; padding: 24px; background: #F5F0E8; }
+
+.detail-card {
+  background: white; border: 1px solid #E0D8CE;
+  border-radius: 16px; padding: 24px; margin-bottom: 14px;
+}
+.detail-step-num {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: #9FB7C8; margin-bottom: 4px;
+}
+.detail-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; line-height: 1.2; }
+.detail-sub   { font-size: 14px; color: #6B6B6B; line-height: 1.6; margin-bottom: 16px; }
+
+.detail-section { margin-bottom: 16px; }
+.detail-section-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #9FB7C8; margin-bottom: 6px;
+}
+.detail-body { font-size: 14px; color: #4A4A4A; line-height: 1.65; }
+
+.deadline-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: #FFFBF0; border: 1px solid #F0E6C8;
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 16px;
+}
+.deadline-icon { font-size: 18px; }
+.deadline-text { font-size: 13px; color: #6B4C1A; }
+.deadline-text strong { color: #2F2F2F; }
+
+.urgency-banner {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #FFF1E0; border: 1px solid #F0B060;
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;
+}
+.urgency-icon { font-size: 20px; flex-shrink: 0; }
+.urgency-text { font-size: 13px; color: #7B4010; line-height: 1.5; }
+.urgency-text strong { color: #2F2F2F; display: block; margin-bottom: 2px; }
+
+.ifsp-source-bar {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #F0F9FF; border: 1px solid #BAE0FF;
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;
+}
+.ifsp-source-icon { font-size: 16px; flex-shrink: 0; }
+.ifsp-source-text { font-size: 12px; color: #0C4A6E; line-height: 1.5; }
+.ifsp-source-text strong { font-weight: 700; }
+
+.concern-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.concern-pill {
+  font-size: 12px; background: #FEF3C7; border: 1px solid #F0D090;
+  color: #78350F; border-radius: 20px; padding: 3px 10px;
+}
+
+.action-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 700; border: none;
+  border-radius: 10px; padding: 10px 18px; cursor: pointer; transition: all 0.15s;
+}
+.btn-primary { background: #D97706; color: white; }
+.btn-primary:hover { background: #B45309; }
+.btn-ghost { background: #F5F0E8; color: #6B6B6B; border: 1px solid #E0D8CE; }
+.btn-ghost:hover { background: #EDE7DB; }
+
+.date-logged {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #F0FAF5; border: 1px solid #C4E6D4;
+  border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; color: #5BA080;
+}
+.date-logged .clear { font-weight: 400; color: #9B9086; cursor: pointer; margin-left: 6px; font-size: 11px; }
+.date-logged .clear:hover { color: #C0655A; }
+.date-logged-ifsp {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #FEF9F0; border: 1px solid #F0D090;
+  border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; color: #92400E;
+}
+.date-logged-ifsp .badge { font-size: 9px; font-weight: 700; text-transform: uppercase; background: #FEF3C7; border-radius: 8px; padding: 1px 5px; margin-left: 4px; }
+.date-logged-ifsp .clear { font-weight: 400; color: #9B9086; cursor: pointer; margin-left: 6px; font-size: 11px; }
+.date-logged-ifsp .clear:hover { color: #C0655A; }
+
+.branch-chooser { display: flex; flex-direction: column; gap: 8px; }
+.branch-choice-btn {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-radius: 12px; border: 2px solid #E0D8CE;
+  background: white; cursor: pointer; text-align: left; transition: all 0.15s;
+}
+.branch-choice-btn:hover { border-color: #D97706; background: #FFFBF0; }
+.branch-choice-btn.chosen { border-color: #D97706; background: #FFFBF0; }
+.branch-choice-btn .bc-label { font-size: 14px; font-weight: 600; }
+.branch-choice-btn .bc-sub   { font-size: 12px; color: #9B9086; margin-top: 2px; }
+.branch-choice-btn .bc-icon  { font-size: 18px; }
+
+.empty-detail {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; color: #9B9086; text-align: center;
+}
+.empty-detail p { font-size: 14px; margin-top: 8px; }
+
+.merge-note {
+  font-size: 11.5px; color: #5BA080; font-style: italic;
+  padding: 4px 8px; background: #F0FAF5;
+  border-radius: 6px; display: inline-block; margin-top: 4px;
+}
+
+.ifsp-timeline { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ifsp-timeline th {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #9B9086; text-align: left;
+  padding: 4px 8px 6px; border-bottom: 1px solid #E0D8CE;
+}
+.ifsp-timeline td { padding: 7px 8px; border-bottom: 1px solid #F5F0E8; vertical-align: top; color: #4A4A4A; }
+.ifsp-timeline .t-date { white-space: nowrap; font-weight: 600; font-size: 11.5px; }
+.ifsp-timeline .t-action { line-height: 1.45; }
+.ifsp-timeline .t-party { color: #9B9086; font-size: 11px; }
+.ifsp-timeline tr.t-done td { color: #B0A898; }
+.ifsp-timeline tr.t-done .t-date { text-decoration: line-through; }
+.ifsp-timeline tr.t-now { background: #FFFBF0; }
+.ifsp-timeline tr.t-now .t-date { color: #D97706; }
+.ifsp-timeline tr.t-urgent { background: #FFF8F0; }
+.ifsp-timeline tr.t-urgent .t-date { color: #C0655A; font-weight: 800; }
+
+.school-contact-bar {
+  background: #F8F4EE; border: 1px solid #E0D8CE;
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 12px;
+  font-size: 12.5px; color: #4A4A4A;
+}
+.school-contact-bar .sc-name { font-weight: 700; color: #2F2F2F; }
+.school-contact-bar .sc-role { color: #9B9086; font-size: 11.5px; }
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-logo">slingshot</div>
+    <div class="hdr-sub">IFSP Transition Tracker</div>
+  </div>
+  <div class="hdr-school">
+    <select id="schoolPicker" class="school-select">
+      <option value="">Select receiving school (MCPS)...</option>
+    </select>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-child">Tracking <strong id="childNameHdr">Luca</strong></div>
+  </div>
+</header>
+
+<div class="progress-strip">
+  <div class="progress-meta">
+    <div class="progress-title" id="progressTitle">Luca's IFSP transition</div>
+    <div class="progress-anchor" id="progressAnchor">Loading...</div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-bar-labels">
+      <span id="progressSteps">...</span>
+      <span id="progressPct">0%</span>
+    </div>
+  </div>
+  <div class="progress-deadline">
+    <div class="progress-deadline-label">Hard deadline</div>
+    <div class="progress-deadline-date">Oct 3, 2026</div>
+    <div class="progress-deadline-days" id="deadlineDays">...</div>
+  </div>
+  <button class="journey-toggle-btn pulsing" id="journeyToggleBtn" onclick="toggleMap()">
+    See your full roadmap
+  </button>
+</div>
+
+<div class="body">
+  <nav class="map hidden" id="mapPanel"></nav>
+  <main class="detail" id="detailPanel">
+    <div class="empty-detail">
+      <div style="font-size:32px;">📋</div>
+      <p>Open the roadmap above to choose a step.</p>
+    </div>
+  </main>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// IFSP DATA — parsed from uploaded MCITP document
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CHILD = 'Luca';
+
+const IFSP = {
+  child: 'Luca Antonio Martinez',
+  dob: 'October 3, 2023',
+  thirdBirthday: 'October 3, 2026',
+  program: 'Montgomery County Infants and Toddlers Program (MCITP)',
+  serviceCoordinator: 'Patricia Chen',
+  planDate: 'April 14, 2026',
+  // Parsed concern areas
+  concerns: [
+    'Communication and language (vocabulary and sentence structure at 12-month level; 30% delay on BDI-3)',
+    'Social-emotional regulation and peer interaction',
+    'Self-feeding and adaptive fine motor skills',
+    'Gross motor development (25% delay)',
+  ],
+  concernsEmail: 'communication and language development, social-emotional regulation, and motor development',
+  // Current services
+  services: [
+    'Speech-Language Therapy — 2x/week, 30 min, home setting',
+    'Developmental Instruction — 1x/week, 60 min, home setting',
+    'Occupational Therapy — monthly consultation',
+  ],
+  // Transition steps parsed from the IFSP transition table
+  transitionSteps: [
+    { date: 'March 1, 2026',     action: 'Notification of potential eligibility sent to MCPS', party: 'Patricia Chen, SC', epochMs: new Date('2026-03-01').getTime() },
+    { date: 'April 14, 2026',   action: 'Family informed of Part B rights and transition process (this meeting)', party: 'Patricia Chen, SC', epochMs: new Date('2026-04-14').getTime() },
+    { date: 'May 2026',          action: 'Send IFSP summary, BDI-3 results, and progress notes to MCPS with family consent', party: 'Patricia Chen + Elena Martinez', epochMs: new Date('2026-05-01').getTime() },
+    { date: 'June 30, 2026',     action: 'Transition conference and MCPS eligibility meeting', party: 'MCPS, Patricia Chen, Elena Martinez', epochMs: new Date('2026-06-30').getTime() },
+    { date: 'July-August 2026',  action: 'MCPS completes Part B evaluation (if not already done)', party: 'MCPS', epochMs: new Date('2026-07-01').getTime() },
+    { date: 'September 2026',    action: 'IEP meeting if eligible, or placement meeting', party: 'MCPS IEP team + Elena Martinez', epochMs: new Date('2026-09-01').getTime() },
+    { date: 'October 3, 2026',   action: 'Part C services end. Part B services begin if eligible.', party: 'All parties', epochMs: new Date('2026-10-03').getTime() },
+  ],
+  // Map each journey step ID to its IFSP-provided scheduled date (for pre-population)
+  stepSchedule: {
+    'concerns':           { date: 'Mar 1, 2026',  source: 'ifsp', note: 'MCITP notified MCPS of potential eligibility' },
+    'sign-consent':       { date: 'May 2026',      source: 'scheduled', note: 'Send IFSP summary + BDI-3 with consent' },
+    'eligibility-meeting':{ date: 'Jun 30, 2026',  source: 'scheduled', note: 'Transition conference scheduled' },
+    'eval-complete':      { date: 'Jul-Aug 2026',  source: 'scheduled', note: 'MCPS completes Part B evaluation' },
+    'iep-meeting':        { date: 'Sep 2026',       source: 'scheduled', note: 'IEP meeting if eligible' },
+    'services-begin':     { date: 'Oct 3, 2026',   source: 'hard-deadline', note: 'Part C ends — hard deadline' },
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MCPS SCHOOLS — representative sample for demo
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MCPS_SCHOOLS = [
+  // A
+  { name: 'Arcola Elementary',                      city: 'Laytonsville, MD 20882',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Ashburton Elementary',                   city: 'Rockville, MD 20853',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // B
+  { name: 'Bannockburn Elementary',                 city: 'Bethesda, MD 20817',           coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Lucy V. Barnsley Elementary',            city: 'Rockville, MD 20853',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Beall Elementary',                       city: 'Rockville, MD 20850',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Bel Pre Elementary',                     city: 'Silver Spring, MD 20906',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Bells Mill Elementary',                  city: 'Potomac, MD 20854',            coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Belmont Elementary',                     city: 'Olney, MD 20832',              coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Bethesda Elementary',                    city: 'Bethesda, MD 20814',           coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Beverly Farms Elementary',               city: 'Potomac, MD 20854',            coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Bradley Hills Elementary',               city: 'Bethesda, MD 20817',           coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Brooke Grove Elementary',                city: 'Olney, MD 20832',              coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Brookhaven Elementary',                  city: 'Silver Spring, MD 20906',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Brown Station Elementary',               city: 'Gaithersburg, MD 20878',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Burning Tree Elementary',                city: 'Bethesda, MD 20817',           coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Burnt Mills Elementary',                 city: 'Silver Spring, MD 20904',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Burtonsville Elementary',                city: 'Burtonsville, MD 20866',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // C
+  { name: 'Cabin Branch Elementary',                city: 'Clarksburg, MD 20871',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Candlewood Elementary',                  city: 'Gaithersburg, MD 20877',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Cannon Road Elementary',                 city: 'Silver Spring, MD 20902',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Carderock Springs Elementary',           city: 'Potomac, MD 20854',            coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Rachel Carson Elementary',               city: 'Gaithersburg, MD 20879',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Cashell Elementary',                     city: 'Gaithersburg, MD 20879',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Cedar Grove Elementary',                 city: 'Gaithersburg, MD 20877',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Chevy Chase Elementary',                 city: 'Chevy Chase, MD 20815',        coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Clarksburg Elementary',                  city: 'Clarksburg, MD 20871',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Clearspring Elementary',                 city: 'Poolesville, MD 20837',        coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Clopper Mill Elementary',                city: 'Gaithersburg, MD 20878',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Cloverly Elementary',                    city: 'Silver Spring, MD 20905',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Cold Spring Elementary',                 city: 'Potomac, MD 20854',            coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'College Gardens Elementary',             city: 'Rockville, MD 20850',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Cresthaven Elementary',                  city: 'Silver Spring, MD 20906',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // D
+  { name: 'Capt. James E. Daly Elementary',         city: 'Germantown, MD 20874',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Damascus Elementary',                    city: 'Damascus, MD 20872',           coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Darnestown Elementary',                  city: 'Darnestown, MD 20874',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Diamond Elementary',                     city: 'Gaithersburg, MD 20879',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Dr. Charles R. Drew Elementary',         city: 'Silver Spring, MD 20904',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'DuFief Elementary',                      city: 'Gaithersburg, MD 20878',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // E
+  { name: 'East Silver Spring Elementary',          city: 'Silver Spring, MD 20901',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // F
+  { name: 'Fairland Elementary',                    city: 'Silver Spring, MD 20904',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Fallsmead Elementary',                   city: 'Rockville, MD 20852',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Farmland Elementary',                    city: 'Rockville, MD 20852',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Fields Road Elementary',                 city: 'Gaithersburg, MD 20877',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Flower Hill Elementary',                 city: 'Gaithersburg, MD 20879',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Flower Valley Elementary',               city: 'Rockville, MD 20853',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Forest Knolls Elementary',               city: 'Silver Spring, MD 20906',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Fox Chapel Elementary',                  city: 'Rockville, MD 20853',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // G
+  { name: 'Gaithersburg Elementary',                city: 'Gaithersburg, MD 20877',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Galway Elementary',                      city: 'Montgomery Village, MD 20886', coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Garrett Park Elementary',                city: 'Garrett Park, MD 20896',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Georgian Forest Elementary',             city: 'Silver Spring, MD 20906',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Germantown Elementary',                  city: 'Germantown, MD 20874',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'William B. Gibbs Jr. Elementary',        city: 'Clarksburg, MD 20871',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Glen Haven Elementary',                  city: 'Silver Spring, MD 20906',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Glenallan Elementary',                   city: 'Silver Spring, MD 20906',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Goshen Elementary',                      city: 'Gaithersburg, MD 20879',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Great Seneca Creek Elementary',          city: 'Germantown, MD 20876',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Greencastle Elementary',                 city: 'Burtonsville, MD 20866',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Greenwood Elementary',                   city: 'Rockville, MD 20850',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // H
+  { name: 'Harmony Hills Elementary',               city: 'Rockville, MD 20853',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Highland Elementary',                    city: 'Silver Spring, MD 20904',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Highland View Elementary',               city: 'Silver Spring, MD 20902',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // J
+  { name: 'Jackson Road Elementary',                city: 'Silver Spring, MD 20904',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Jones Lane Elementary',                  city: 'Rockville, MD 20852',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // K
+  { name: 'Kemp Mill Elementary',                   city: 'Silver Spring, MD 20902',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Kensington Parkwood Elementary',         city: 'Kensington, MD 20895',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // L
+  { name: 'Lake Seneca Elementary',                 city: 'Germantown, MD 20876',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Lakewood Elementary',                    city: 'Rockville, MD 20851',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Laytonsville Elementary',                city: 'Laytonsville, MD 20882',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'JoAnn Leleck Elem. at Broad Acres',      city: 'Silver Spring, MD 20903',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Little Bennett Elementary',              city: 'Clarksburg, MD 20871',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Luxmanor Elementary',                    city: 'Rockville, MD 20852',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // M
+  { name: 'Thurgood Marshall Elementary',           city: 'Gaithersburg, MD 20878',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Maryvale Elementary',                    city: 'Rockville, MD 20852',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Spark M. Matsunaga Elementary',          city: 'Germantown, MD 20874',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'S. Christa McAuliffe Elementary',        city: 'Gaithersburg, MD 20878',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Dr. Ronald E. McNair Elementary',        city: 'Gaithersburg, MD 20879',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Meadow Hall Elementary',                 city: 'Silver Spring, MD 20906',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Mill Creek Towne Elementary',            city: 'Gaithersburg, MD 20877',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Monocacy Elementary',                    city: 'Clarksburg, MD 20871',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Montgomery Knolls Elementary',           city: 'Silver Spring, MD 20901',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // N
+  { name: 'New Hampshire Estates Elementary',       city: 'Silver Spring, MD 20903',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Roscoe R. Nix Elementary',               city: 'Silver Spring, MD 20901',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'North Chevy Chase Elementary',           city: 'Chevy Chase, MD 20815',        coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // O
+  { name: 'Oak View Elementary',                    city: 'Silver Spring, MD 20902',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Oakland Terrace Elementary',             city: 'Silver Spring, MD 20904',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Olney Elementary',                       city: 'Olney, MD 20832',              coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // P
+  { name: 'William Tyler Page Elementary',          city: 'Bethesda, MD 20816',           coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Pine Crest Elementary',                  city: 'Silver Spring, MD 20906',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Piney Branch Elementary',                city: 'Silver Spring, MD 20906',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Poolesville Elementary',                 city: 'Poolesville, MD 20837',        coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Potomac Elementary',                     city: 'Potomac, MD 20854',            coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // R
+  { name: 'Judith A. Resnik Elementary',            city: 'Gaithersburg, MD 20879',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Dr. Sally K. Ride Elementary',           city: 'Germantown, MD 20874',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Ritchie Park Elementary',                city: 'Rockville, MD 20852',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Rock Creek Forest Elementary',           city: 'Silver Spring, MD 20902',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Rock Creek Valley Elementary',           city: 'Rockville, MD 20853',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Rock View Elementary',                   city: 'Silver Spring, MD 20902',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Lois P. Rockwell Elementary',            city: 'Damascus, MD 20872',           coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Rolling Terrace Elementary',             city: 'Silver Spring, MD 20901',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Rosemary Hills Elementary',              city: 'Silver Spring, MD 20910',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Rosemont Elementary',                    city: 'Silver Spring, MD 20910',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Bayard Rustin Elementary',               city: 'Gaithersburg, MD 20879',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // S
+  { name: 'Sequoyah Elementary',                    city: 'Rockville, MD 20850',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Seven Locks Elementary',                 city: 'Potomac, MD 20854',            coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Sherwood Elementary',                    city: 'Sandy Spring, MD 20860',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Sargent Shriver Elementary',             city: 'Silver Spring, MD 20906',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Flora M. Singer Elementary',             city: 'Silver Spring, MD 20910',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Sligo Creek Elementary',                 city: 'Silver Spring, MD 20901',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Snowden Farm Elementary',                city: 'Germantown, MD 20876',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Somerset Elementary',                    city: 'Chevy Chase, MD 20815',        coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'South Lake Elementary',                  city: 'Gaithersburg, MD 20879',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Stedwick Elementary',                    city: 'Montgomery Village, MD 20886', coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Stone Mill Elementary',                  city: 'Potomac, MD 20854',            coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Stonegate Elementary',                   city: 'Silver Spring, MD 20905',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Strathmore Elementary',                  city: 'Rockville, MD 20852',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Strawberry Knoll Elementary',            city: 'Gaithersburg, MD 20877',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Summit Hall Elementary',                 city: 'Gaithersburg, MD 20877',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // T
+  { name: 'Takoma Park Elementary',                 city: 'Takoma Park, MD 20912',        coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Travilah Elementary',                    city: 'Rockville, MD 20850',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Harriet R. Tubman Elementary',           city: 'Silver Spring, MD 20902',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Twinbrook Elementary',                   city: 'Rockville, MD 20851',          coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // V
+  { name: 'Viers Mill Elementary',                  city: 'Silver Spring, MD 20902',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // W
+  { name: 'Washington Grove Elementary',            city: 'Gaithersburg, MD 20877',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Waters Landing Elementary',              city: 'Germantown, MD 20874',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Watkins Mill Elementary',                city: 'Gaithersburg, MD 20879',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Wayside Elementary',                     city: 'Potomac, MD 20854',            coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Weller Road Elementary',                 city: 'Silver Spring, MD 20906',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Westbrook Elementary',                   city: 'Bethesda, MD 20817',           coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Westover Elementary',                    city: 'Bethesda, MD 20016',           coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Wheaton Woods Elementary',               city: 'Silver Spring, MD 20902',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Whetstone Elementary',                   city: 'Gaithersburg, MD 20877',       coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Wilson Wims Elementary',                 city: 'Clarksburg, MD 20871',         coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Wood Acres Elementary',                  city: 'Bethesda, MD 20016',           coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Woodfield Elementary',                   city: 'Damascus, MD 20872',           coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  { name: 'Woodlin Elementary',                     city: 'Silver Spring, MD 20901',      coordinator: 'SPED Coordinator',        role: 'Special Education Team' },
+  // Wyngate — confirmed: 9300 Wadsworth Drive, Bethesda MD 20817. Principal: Mrs. Catherine (Katie) Guenthner
+  { name: 'Wyngate Elementary',                     city: 'Bethesda, MD 20817',           coordinator: 'Mrs. Catherine Guenthner', role: 'Principal' },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BRANCH COLORS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const BRANCH_COLORS = {
+  eligible:              { icon: '✓', cls: 'green',  label: 'Found eligible for special education' },
+  'not-eligible-fight':  { icon: '!', cls: 'orange', label: 'Not eligible — I disagree' },
+  'not-eligible-ok':     { icon: '~', cls: 'grey',   label: 'Not eligible — I accept it for now' },
+  '504-offered':         { icon: '§', cls: 'blue',   label: '504 plan offered instead of IEP' },
+  'now-eligible':        { icon: '✓', cls: 'green',  label: 'Second evaluation found eligible' },
+  'still-not-eligible':  { icon: '!', cls: 'red',    label: 'Still not eligible — escalate' },
+  'accept-504':          { icon: '~', cls: 'grey',   label: 'Accept the 504 plan' },
+  'push-for-iep':        { icon: '↑', cls: 'orange', label: 'Push for IEP instead' },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP DEFINITIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const STEPS = [
+  {
+    id: 'concerns', num: 1,
+    label: 'Document your concerns',
+    sub: 'Before starting the process',
+    what: `Write down specific things you're seeing at home or hearing from teachers. Dates matter. "On April 3rd he couldn't..." is more useful than "he often struggles."`,
+    why: `Your written observations become part of the official record. If the school later disputes that a problem exists, you want a dated log showing the pattern.`,
+    howTo: `Keep a running note on your phone. One sentence per incident. Date, what happened, who was there. Don't filter — write it all down and decide what's relevant later.`,
+    deadline: null,
+    loggable: true,
+    ifspNote: `Luca's MCITP service coordinator, Patricia Chen, notified MCPS of his potential eligibility on March 1, 2026. The IFSP itself is the primary document of his developmental history and family concerns.`,
+  },
+  {
+    id: 'send-request', num: 2,
+    label: 'Reach out to the school',
+    sub: 'Connect with the receiving school now',
+    what: `A warm outreach to the principal or SPED coordinator at Luca's receiving school. This starts your relationship with the school team and gets you on their radar before the June 30 conference.`,
+    why: `The transition conference is 6 days away. Schools are busy — if you haven't connected yet, a brief email today ensures someone on the school side is prepared.`,
+    howTo: `Select the school above. Then copy the email below and send it from your personal email. CC yourself. Keep the tone warm — you're not filing a complaint, you're starting a relationship.`,
+    deadline: { label: 'Transition conference is June 30 — reach out before then' },
+    loggable: true,
+  },
+  {
+    id: 'sign-consent', num: 3,
+    label: 'Send IFSP records and sign consent',
+    sub: 'May 2026 — per IFSP transition plan',
+    what: `Send Luca's IFSP summary, BDI-3 results, and progress notes to MCPS with your signed consent. This is the packet Patricia Chen will help you prepare.`,
+    why: `Without your records, MCPS starts from scratch. Your IFSP documents years of services, progress, and professional observations that should inform their evaluation.`,
+    howTo: `Work with Patricia Chen to prepare the consent and document packet. Make sure BDI-3 scores, all three service providers' progress notes, and the transition plan are included.`,
+    deadline: { label: 'Should be sent by May 2026 per IFSP transition plan' },
+    loggable: true,
+  },
+  {
+    id: 'eval-complete', num: 4,
+    label: 'Receive MCPS evaluation reports',
+    sub: 'Read everything before the IEP meeting',
+    what: `MCPS completes its own Part B evaluation and sends you written reports. You have the right to receive these before any eligibility or IEP meeting.`,
+    why: `If reports arrive at the meeting, you're being asked to make decisions on the spot. Request them at least 3-5 days in advance.`,
+    howTo: `MCPS has until July-August per the transition plan. Once you have the reports: read them all, compare to Luca's IFSP scores, and write questions for anything that surprises you.`,
+    deadline: { label: 'Request reports at least 5 days before any eligibility meeting' },
+    loggable: true,
+  },
+  {
+    id: 'eligibility-meeting', num: 5,
+    label: 'Transition conference and eligibility meeting',
+    sub: 'June 30, 2026 at 10:00 AM — virtual via Teams',
+    what: `The IEP team reviews Luca's evaluation results and decides whether he qualifies for Part B special education services. Patricia Chen, MCPS, and an eligibility specialist will attend.`,
+    why: `The outcome here determines everything that follows. You don't have to agree to anything at this meeting. You can say "I'd like time to review" before signing anything.`,
+    howTo: `Bring the IFSP and your notes. Ask the team to walk through each area before any eligibility decision. If you disagree with a finding, say so and ask them to note your disagreement in writing.`,
+    deadline: { label: 'Scheduled: June 30, 2026 at 10:00 AM — virtual via Teams' },
+    loggable: true,
+    isBranch: true,
+    branchLabel: 'What did the team decide?',
+    branches: ['eligible', 'not-eligible-fight', 'not-eligible-ok', '504-offered'],
+  },
+];
+
+const BRANCH_STEPS = {
+  eligible: [
+    {
+      id: 'iep-meeting', num: '6A',
+      label: 'IEP team meeting',
+      sub: 'Goals and services written',
+      what: `The IEP team writes Luca's Individualized Education Program — goals, services (what, how often, by whom), and placement. This document governs everything.`,
+      why: `The IEP is a legal contract. Services not written in the IEP don't have to be provided.`,
+      howTo: `Come with your own list of goals based on the IFSP outcomes. Push for specifics: not "speech therapy" but "speech therapy 2x/week 30 min with a licensed SLP." Ask that IFSP services inform the IEP starting point.`,
+      deadline: { label: 'IEP must be in place by October 3, 2026 (Luca\'s third birthday)' },
+      loggable: true,
+    },
+    {
+      id: 'review-iep', num: '7A',
+      label: 'Review and sign IEP',
+      sub: 'Or request changes in writing first',
+      what: `You receive the draft IEP and either sign it (approving services), sign with written disagreement, or ask for changes before signing.`,
+      why: `You don't have to sign at the meeting. You can take it home, review it, and respond in writing. Services are often less than what was discussed verbally.`,
+      howTo: `Compare service hours to what was discussed. Check that goals are measurable and specific. Compare to IFSP service levels — any significant reduction should be explained in writing.`,
+      deadline: null,
+      loggable: true,
+    },
+    {
+      id: 'services-begin', num: '8A',
+      label: 'Part B services begin',
+      sub: 'October 3, 2026 — hard deadline',
+      what: `Services listed in the IEP must start no later than Luca's third birthday on October 3, 2026. Track whether they actually happen at the correct frequency.`,
+      why: `Service delivery gaps are the most common compliance failure. Create a log from day one.`,
+      howTo: `Log each session: date, service type, provider, duration. Check against the IEP monthly. If sessions are consistently missed, document and raise in writing.`,
+      deadline: { label: 'Part C ends October 3, 2026 — Part B must begin that day' },
+      loggable: true,
+    },
+    {
+      id: 'thirty-day', num: '9A',
+      label: '30-day services check',
+      sub: 'Are services actually being delivered?',
+      what: `30 days after services begin, review your log. Are sessions happening as written in the IEP?`,
+      why: `Early gaps are easier to fix than gaps discovered at the annual review.`,
+      howTo: `Compare your log to the IEP. If there are gaps, email the case manager with specific dates. Keep the tone factual and collaborative.`,
+      deadline: { label: '30 days after services start' },
+      loggable: true,
+    },
+    {
+      id: 'annual-review', num: '10A',
+      label: 'Annual IEP review',
+      sub: 'Required every 12 months',
+      what: `The IEP team meets at least annually to review progress on goals and update the IEP for the coming year.`,
+      why: `This is your opportunity to add services, strengthen goals, and address what didn't work.`,
+      howTo: `Before the meeting: review progress notes, your service log, and teacher reports. Prepare a written summary of what you've observed at home.`,
+      deadline: { label: 'Must occur at least every 12 months' },
+      loggable: true,
+      isRepeat: true,
+    },
+  ],
+
+  'not-eligible-fight': [
+    {
+      id: 'request-iee', num: '6B',
+      label: 'Request IEE at public expense',
+      sub: 'Independent evaluation — school pays',
+      what: `You have the right to an Independent Educational Evaluation (IEE) conducted by an evaluator not employed by the school district, at the district's expense.`,
+      why: `School evaluators work for the school. An independent evaluator has no institutional interest. IEE results must be considered at the next eligibility meeting.`,
+      howTo: `Send a written request immediately. The district must either fund the IEE or file for due process to defend their evaluation. Most districts comply.`,
+      deadline: { label: 'District must respond to IEE request within ~10 school days' },
+      loggable: true,
+    },
+    {
+      id: 'iee-complete', num: '7B',
+      label: 'IEE completed',
+      sub: 'Independent evaluator submits report',
+      what: `The independent evaluator completes their assessment and sends a written report. This becomes part of Luca's educational record.`,
+      why: `A strong IEE from an outside expert often carries significant weight. If it contradicts the school's evaluation, the team must explain why in writing.`,
+      howTo: `Ask the IEE evaluator to attend the second eligibility meeting if possible. Their in-person testimony is more powerful than a written report alone.`,
+      deadline: null,
+      loggable: true,
+    },
+    {
+      id: 'second-eligibility', num: '8B',
+      label: 'Second eligibility meeting',
+      sub: 'With IEE results — another decision point',
+      what: `The IEP team reconvenes with the IEE results and makes a new eligibility determination.`,
+      why: `This meeting often goes differently. A strong IEE report combined with your documented observations frequently shifts the outcome.`,
+      howTo: `Bring the IEE evaluator if possible. Highlight findings that contradict the school's evaluation. Ask the team to explain in writing any conclusions that differ from the IEE.`,
+      deadline: null,
+      loggable: true,
+      isBranch: true,
+      branchLabel: 'What happened at the second meeting?',
+      branches: ['now-eligible', 'still-not-eligible'],
+    },
+  ],
+  'now-eligible': [],
+  'still-not-eligible': [
+    {
+      id: 'escalate', num: '9B',
+      label: 'Mediation or due process',
+      sub: 'Formal dispute resolution',
+      what: `Two formal options: Mediation (neutral third party) or Due Process (hearing before an administrative law judge). Both are free to request.`,
+      why: `Schools take mediation and due process requests seriously. Filing often prompts a settlement before the hearing date.`,
+      howTo: `File with your state education agency. In Maryland: MSDE Office of Special Education. Typical statute of limitations: 2 years from the disputed decision.`,
+      deadline: { label: 'Typically 2-year statute of limitations from date of disputed decision' },
+      loggable: true,
+    },
+    {
+      id: 'state-complaint', num: '10B',
+      label: 'State complaint (parallel option)',
+      sub: 'Faster than due process for procedural violations',
+      what: `A state complaint filed with MSDE alleging a procedural violation. Decision within 60 days.`,
+      why: `State complaints are faster than due process and cost nothing. Especially effective when the school missed a legal deadline.`,
+      howTo: `Document the specific procedural violation with dates. File with MSDE in Maryland. A state complaint and due process can run in parallel.`,
+      deadline: { label: 'State agency must resolve within 60 days of receiving complaint' },
+      loggable: true,
+    },
+  ],
+
+  'not-eligible-ok': [
+    {
+      id: 'explore-504', num: '6C',
+      label: 'Explore 504 accommodations',
+      sub: 'Lower bar — no specialized instruction',
+      what: `A 504 plan provides accommodations (extra time, preferential seating) but not specialized instruction or IEP goals.`,
+      why: `If Luca's challenges are primarily about access rather than instruction, a 504 may be enough. If he needs active teaching support, push for IEP.`,
+      howTo: `Ask for a 504 meeting. Be specific about what accommodations would help. Services like speech therapy and OT are typically IEP-only.`,
+      deadline: null,
+      loggable: true,
+    },
+    {
+      id: 'future-eval-request', num: '7C',
+      label: 'New evaluation request — future',
+      sub: 'You can re-request at any time',
+      what: `If Luca's needs change or new evidence emerges, you can request a new evaluation at any time. There is no mandatory waiting period.`,
+      why: `Circumstances change. A new teacher, a new diagnosis, or documented evidence of continued struggle can all support a new evaluation request.`,
+      howTo: `Keep your home observation log active. A new request with documented evidence from the past 6-12 months is much stronger.`,
+      deadline: null,
+      loggable: false,
+    },
+  ],
+
+  '504-offered': [
+    {
+      id: 'review-504', num: '6D',
+      label: 'Review the 504 plan',
+      sub: 'What\'s actually included?',
+      what: `The school offers a 504 plan. Review what accommodations are listed and whether they address Luca's actual needs.`,
+      why: `504 plans vary wildly in quality. A vague plan is almost the same as no plan.`,
+      howTo: `Ask: Is specialized instruction included? Are accommodations specific and measurable? Is there a person responsible for each? If the plan is vague, push back in writing.`,
+      deadline: null,
+      loggable: true,
+      isBranch: true,
+      branchLabel: 'Do you accept the 504 or push for an IEP?',
+      branches: ['accept-504', 'push-for-iep'],
+    },
+  ],
+  'accept-504': [
+    {
+      id: '504-annual', num: '7D',
+      label: '504 annual review',
+      sub: 'Required each year — use it to upgrade',
+      what: `504 plans should be reviewed annually. Use this to add accommodations or re-evaluate whether an IEP is warranted.`,
+      why: `Luca's needs will change. Annual reviews are your opportunity to strengthen the plan or transition to IEP if the 504 isn't enough.`,
+      howTo: `Before the meeting: document what worked and what didn't. If struggles have increased, bring data and ask whether IEP eligibility should be re-evaluated.`,
+      deadline: { label: 'Must occur at least every 12 months' },
+      loggable: true,
+      isRepeat: true,
+    },
+  ],
+  'push-for-iep': [],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TODAY = new Date();
+
+function daysUntil(dateStr) {
+  const d = new Date(dateStr);
+  return Math.round((d - TODAY) / (1000 * 60 * 60 * 24));
+}
+
+function getEmailTemplate() {
+  const school = state.selectedSchool !== null ? MCPS_SCHOOLS[state.selectedSchool] : null;
+  const salutation = school
+    ? `Dear ${school.coordinator},`
+    : `Dear [Principal / SPED Coordinator],`;
+  const schoolLine = school
+    ? `We understand that Luca would be attending ${school.name} in ${school.city} once he transitions to Part B services.`
+    : `[We understand Luca would be attending your school once he transitions to Part B services.]`;
+  const coordLine = school
+    ? `Could you connect us with ${school.coordinator} (${school.role}) or whoever will be coordinating Luca's transition on the school's end?`
+    : `Could you connect us with the SPED coordinator or whoever will be managing Luca's transition on the school's end?`;
+
+  return `${salutation}
+
+My name is Elena Martinez, and I'm the parent of Luca Martinez (date of birth: October 3, 2023). Luca turns 3 on October 3, 2026, and he is currently receiving early intervention services through the Montgomery County Infants and Toddlers Program (MCITP).
+
+${schoolLine}
+
+Luca's service coordinator at MCITP, Patricia Chen, notified MCPS of his potential eligibility for Part B services in March 2026. His current IFSP identifies support needs in the areas of ${IFSP.concernsEmail}. We have a transition conference scheduled for June 30, 2026.
+
+I want to make sure we are connected with the right people at the school ahead of that meeting. ${coordLine}
+
+A few quick questions:
+  1. What consent forms do you need from us to receive Luca's IFSP and progress records?
+  2. Will MCPS conduct its own Part B evaluation, or will you rely on MCITP's BDI-3 results?
+  3. What should I bring to the June 30 conference?
+
+I've attached a copy of Luca's current IFSP for reference. Thank you so much for helping us make this transition a smooth one.
+
+Warm regards,
+Elena Martinez
+[Your phone / email]
+[Today's date]`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+
+const KEY = 'slingshot_journey_v2';
+let state = loadState();
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(KEY) || 'null') || defaultState(); }
+  catch { return defaultState(); }
+}
+
+function defaultState() {
+  return {
+    datesLogged: { 'concerns': 'Mar 1, 2026' },
+    ifspSourced: ['concerns'],
+    scheduledVisible: true,
+    branchChoices: {},
+    activeStep: 'send-request',
+    selectedSchool: null,
+    mapOpen: false,
+    hasSeenMap: false,
+  };
+}
+
+function saveState() { localStorage.setItem(KEY, JSON.stringify(state)); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DATE / STATUS HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function isDone(id) { return !!state.datesLogged[id]; }
+function getDate(id) { return state.datesLogged[id] || null; }
+function isIfspSourced(id) { return (state.ifspSourced || []).includes(id); }
+
+function getScheduledDate(id) {
+  const s = IFSP.stepSchedule[id];
+  if (!s) return null;
+  if (isDone(id)) return null;
+  return s;
+}
+
+function getActivePath() {
+  const path = [];
+  for (const step of STEPS) {
+    path.push({ step, branchId: null, depth: 0 });
+    if (step.isBranch) {
+      const chosen = state.branchChoices[step.id];
+      if (chosen) {
+        const branchSteps = BRANCH_STEPS[chosen] || [];
+        for (const bs of branchSteps) {
+          path.push({ step: bs, branchId: chosen, depth: 1 });
+          if (bs.isBranch) {
+            const chosen2 = state.branchChoices[bs.id];
+            if (chosen2) {
+              for (const ss of BRANCH_STEPS[chosen2] || []) {
+                path.push({ step: ss, branchId: chosen2, depth: 2 });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return path;
+}
+
+function getActiveStepId() {
+  const path = getActivePath();
+  for (const { step } of path) {
+    if (!isDone(step.id)) return step.id;
+  }
+  return path[path.length - 1]?.step.id || null;
+}
+
+function getAllStepDefs() {
+  const all = {};
+  for (const s of STEPS) all[s.id] = s;
+  for (const key of Object.keys(BRANCH_STEPS)) {
+    for (const s of BRANCH_STEPS[key]) all[s.id] = s;
+  }
+  return all;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCHOOL PICKER INIT
+// ─────────────────────────────────────────────────────────────────────────────
+
+function initSchoolPicker() {
+  const sel = document.getElementById('schoolPicker');
+  MCPS_SCHOOLS.forEach((school, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${school.name} — ${school.city}`;
+    sel.appendChild(opt);
+  });
+  if (state.selectedSchool !== null) sel.value = state.selectedSchool;
+  sel.addEventListener('change', () => {
+    state.selectedSchool = sel.value !== '' ? parseInt(sel.value) : null;
+    saveState();
+    renderDetail();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDERING — MAP
+// ─────────────────────────────────────────────────────────────────────────────
+
+function renderMap() {
+  const panel = document.getElementById('mapPanel');
+  const activeId = state.activeStep || getActiveStepId();
+  let html = `<div class="map-title">Journey map — click any step</div>`;
+
+  for (let i = 0; i < STEPS.length; i++) {
+    const step = STEPS[i];
+    const done = isDone(step.id);
+    const active = step.id === activeId;
+    const isLast = i === STEPS.length - 1;
+    const chosen = step.isBranch ? state.branchChoices[step.id] : null;
+
+    html += renderStepRow(step, done, active, !isLast, 0);
+
+    if (step.isBranch) {
+      html += renderBranchFork(step, activeId, chosen);
+    }
+  }
+
+  panel.innerHTML = html;
+  attachMapEvents();
+  updatePathLabel();
+}
+
+function renderStepRow(step, done, active, showLine, depth) {
+  const ifspSrc = isIfspSourced(step.id);
+  const sched = getScheduledDate(step.id);
+  const dotCls = done ? (ifspSrc ? 'ifsp-done' : 'done') : active ? 'active' : sched ? 'scheduled' : 'locked';
+  const dotShape = step.isBranch ? 'branch-point' : '';
+  const labelCls = active ? 'active' : '';
+  const nameCls = (!done && !active && !sched) ? 'locked' : '';
+  const date = getDate(step.id);
+
+  let dateBadge = '';
+  if (date) {
+    if (ifspSrc) {
+      dateBadge = `<div class="step-date-ifsp">from IFSP · ${date}</div>`;
+    } else {
+      dateBadge = `<div class="step-date">✓ ${date}</div>`;
+    }
+  } else if (sched) {
+    const cls = sched.source === 'hard-deadline' ? 'step-overdue' : 'step-date-scheduled';
+    dateBadge = `<div class="${cls}">${sched.source === 'hard-deadline' ? '⚠ deadline: ' : ''}${sched.date}</div>`;
+  }
+
+  const lineCls = done ? (ifspSrc ? 'ifsp-done' : 'done') : '';
+
+  return `
+    <div class="step-row${active ? ' active' : ''}" data-step="${step.id}" style="padding-left:${depth * 20}px">
+      <div class="step-gutter">
+        <div class="step-dot ${dotCls} ${dotShape}"></div>
+        ${showLine ? `<div class="step-line ${lineCls}"></div>` : ''}
+      </div>
+      <div class="step-label ${labelCls}" style="margin-top:4px">
+        <div class="step-name ${nameCls}">
+          ${step.label}
+          ${step.isRepeat ? `<span class="repeat-badge">repeating</span>` : ''}
+        </div>
+        <div class="step-meta">${step.sub}</div>
+        ${dateBadge}
+      </div>
+    </div>`;
+}
+
+function renderBranchFork(branchStep, activeId, chosenBranchId) {
+  let html = `<div class="branch-container">
+    <div class="branch-label">Choose what happened:</div>`;
+
+  for (const branchId of branchStep.branches) {
+    const bc = BRANCH_COLORS[branchId];
+    const isChosen = branchId === chosenBranchId;
+    const subSteps = BRANCH_STEPS[branchId] || [];
+    const mergesTo = branchId === 'now-eligible' ? 'iep-meeting' : branchId === 'push-for-iep' ? 'request-iee' : null;
+
+    html += `<div class="branch-option${isChosen ? ' chosen' : chosenBranchId ? ' unchosen' : ''}" data-branch-step="${branchStep.id}" data-branch="${branchId}">
+      <div class="branch-gutter">
+        <div class="branch-spine"></div>
+        <div class="step-dot ${isChosen ? 'active' : 'locked'}" style="margin-top:10px;width:10px;height:10px"></div>
+      </div>
+      <div style="flex:1">
+        <div class="branch-tab">
+          <div class="branch-icon ${bc.cls}">${bc.icon}</div>
+          <div>
+            <div class="branch-name">${bc.label}</div>
+          </div>
+        </div>`;
+
+    if (isChosen) {
+      if (mergesTo) {
+        html += `<div style="padding:2px 8px 8px"><div class="merge-note">↳ Continues to IEP path</div></div>`;
+      } else {
+        for (let j = 0; j < subSteps.length; j++) {
+          const ss = subSteps[j];
+          const ssDone = isDone(ss.id);
+          const ssActive = ss.id === activeId;
+          const ssLast = j === subSteps.length - 1 && !ss.isBranch;
+          html += renderStepRow(ss, ssDone, ssActive, !ssLast, 0);
+          if (ss.isBranch) {
+            const chosen2 = state.branchChoices[ss.id];
+            html += renderBranchFork(ss, activeId, chosen2);
+          }
+        }
+      }
+    }
+
+    html += `</div></div>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+function attachMapEvents() {
+  document.querySelectorAll('.step-row').forEach(el => {
+    el.addEventListener('click', () => {
+      state.activeStep = el.dataset.step;
+      saveState();
+      renderMap();
+      renderDetail();
+    });
+  });
+  document.querySelectorAll('.branch-option').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const branchStepId = el.dataset.branchStep;
+      const branchId = el.dataset.branch;
+      if (state.branchChoices[branchStepId] === branchId) {
+        delete state.branchChoices[branchStepId];
+        clearDownstreamChoices(branchId);
+      } else {
+        state.branchChoices[branchStepId] = branchId;
+        state.activeStep = getFirstStepOfBranch(branchId);
+      }
+      saveState();
+      renderMap();
+      renderDetail();
+    });
+  });
+}
+
+function clearDownstreamChoices(branchId) {
+  for (const s of BRANCH_STEPS[branchId] || []) {
+    if (s.isBranch) {
+      const sub = state.branchChoices[s.id];
+      if (sub) { clearDownstreamChoices(sub); delete state.branchChoices[s.id]; }
+    }
+  }
+}
+
+function getFirstStepOfBranch(branchId) {
+  return (BRANCH_STEPS[branchId] || [])[0]?.id || null;
+}
+
+function updatePathLabel() {
+  const path = getActivePath();
+  const total = path.length;
+  const done = path.filter(p => isDone(p.step.id)).length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+
+  // Progress bar fill
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressSteps').textContent = `${done} of ${total} steps logged`;
+  document.getElementById('progressPct').textContent = `${pct}% complete`;
+
+  // Anchor message
+  const anchorEl = document.getElementById('progressAnchor');
+  if (done === 0) {
+    anchorEl.textContent = "Let's get started.";
+    anchorEl.style.color = '#9B9086';
+  } else if (done === 1 && (state.ifspSourced || []).includes('concerns')) {
+    anchorEl.textContent = 'Already underway — documentation logged from your IFSP upload.';
+    anchorEl.style.color = '#5BA080';
+  } else if (pct === 100) {
+    anchorEl.textContent = 'All steps complete.';
+    anchorEl.style.color = '#5BA080';
+  } else {
+    anchorEl.textContent = `${done} step${done === 1 ? '' : 's'} complete. Keep going.`;
+    anchorEl.style.color = '#5BA080';
+  }
+
+  // Hard deadline countdown
+  const days = daysUntil('2026-10-03');
+  const deadlineEl = document.getElementById('deadlineDays');
+  if (days > 0) deadlineEl.textContent = `${days} days away`;
+  else if (days === 0) deadlineEl.textContent = 'Today';
+  else deadlineEl.textContent = `${Math.abs(days)} days ago`;
+
+  // Toggle button label
+  const btn = document.getElementById('journeyToggleBtn');
+  if (btn) {
+    if (state.mapOpen) {
+      btn.textContent = 'Close map';
+      btn.classList.add('map-open');
+      btn.classList.remove('pulsing');
+    } else {
+      btn.textContent = 'See your full roadmap';
+      btn.classList.remove('map-open');
+      if (!state.hasSeenMap) btn.classList.add('pulsing');
+    }
+  }
+}
+
+function toggleMap() {
+  state.mapOpen = !state.mapOpen;
+  if (state.mapOpen && !state.hasSeenMap) {
+    state.hasSeenMap = true;
+    const btn = document.getElementById('journeyToggleBtn');
+    if (btn) btn.classList.remove('pulsing');
+  }
+  const mapEl = document.getElementById('mapPanel');
+  if (state.mapOpen) {
+    mapEl.classList.remove('hidden');
+  } else {
+    mapEl.classList.add('hidden');
+  }
+  saveState();
+  updatePathLabel();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDERING — DETAIL
+// ─────────────────────────────────────────────────────────────────────────────
+
+function findStepDef(id) { return getAllStepDefs()[id] || null; }
+
+function renderDetail() {
+  const panel = document.getElementById('detailPanel');
+  const id = state.activeStep;
+  if (!id) {
+    panel.innerHTML = `<div class="empty-detail"><div style="font-size:32px">📋</div><p>Open the roadmap to choose a step.</p></div>`;
+    return;
+  }
+
+  const step = findStepDef(id);
+  if (!step) return;
+
+  const done = isDone(id);
+  const date = getDate(id);
+  const ifspSrc = isIfspSourced(id);
+  const sched = IFSP.stepSchedule[id];
+  const school = state.selectedSchool !== null ? MCPS_SCHOOLS[state.selectedSchool] : null;
+
+  let html = '';
+
+  // ── Urgency banner for send-request (conference is 6 days away)
+  if (id === 'send-request') {
+    const days = daysUntil('2026-06-30');
+    const urgencyText = days > 0
+      ? `The transition conference is in <strong>${days} day${days === 1 ? '' : 's'} (June 30).</strong> If you haven't connected with the school yet, today is the day.`
+      : days === 0
+        ? `<strong>The transition conference is today (June 30).</strong> Make sure you're prepared.`
+        : `<strong>The June 30 conference has passed.</strong> Follow up with the school on next steps.`;
+    html += `<div class="urgency-banner">
+      <div class="urgency-icon">⏰</div>
+      <div class="urgency-text">${urgencyText}</div>
+    </div>`;
+  }
+
+  // ── IFSP source banner for steps with parsed data
+  if (id === 'concerns') {
+    html += `<div class="ifsp-source-bar">
+      <div class="ifsp-source-icon">📋</div>
+      <div class="ifsp-source-text">
+        <strong>Pre-loaded from Luca's MCITP IFSP (April 14, 2026)</strong><br>
+        Concern areas and transition dates were parsed from the uploaded IFSP document.
+      </div>
+    </div>`;
+  }
+
+  if (id === 'eligibility-meeting') {
+    html += `<div class="ifsp-source-bar">
+      <div class="ifsp-source-icon">📋</div>
+      <div class="ifsp-source-text">
+        <strong>Pre-loaded from Luca's IFSP transition plan</strong><br>
+        Conference date, participants, and timeline below were extracted from the IFSP document.
+      </div>
+    </div>`;
+  }
+
+  // ── Main card
+  html += `<div class="detail-card">
+    <div class="detail-step-num">Step ${step.num || '?'}</div>
+    <div class="detail-title">${step.label}</div>
+    <div class="detail-sub">${step.sub}</div>`;
+
+  if (step.deadline) {
+    html += `<div class="deadline-bar">
+      <div class="deadline-icon">⏱</div>
+      <div class="deadline-text">${step.deadline.label}</div>
+    </div>`;
+  }
+
+  // School contact bar for send-request
+  if (id === 'send-request' && school) {
+    html += `<div class="school-contact-bar">
+      Sending to: <span class="sc-name">${school.name}</span>
+      <span style="color:#9B9086"> · </span>
+      <span class="sc-name">${school.coordinator}</span>
+      <span class="sc-role">, ${school.role}</span>
+    </div>`;
+  } else if (id === 'send-request' && !school) {
+    html += `<div class="school-contact-bar" style="border-color:#D97706; background:#FFF8E7;">
+      <span style="color:#92400E;">Select the receiving school in the header to auto-fill the email below.</span>
+    </div>`;
+  }
+
+  if (step.what) {
+    html += `<div class="detail-section">
+      <div class="detail-section-label">What this is</div>
+      <div class="detail-body">${step.what}</div>
+    </div>`;
+  }
+
+  // IFSP-specific concerns for the concerns step
+  if (id === 'concerns') {
+    html += `<div class="detail-section">
+      <div class="detail-section-label">Concern areas — from Luca's IFSP</div>
+      <div class="concern-pills">
+        ${IFSP.concerns.map(c => `<div class="concern-pill">${c}</div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  if (step.why) {
+    html += `<div class="detail-section">
+      <div class="detail-section-label">Why it matters</div>
+      <div class="detail-body">${step.why}</div>
+    </div>`;
+  }
+  if (step.howTo) {
+    html += `<div class="detail-section">
+      <div class="detail-section-label">What to do</div>
+      <div class="detail-body">${step.howTo}</div>
+    </div>`;
+  }
+
+  // Log button / date display
+  if (step.loggable !== false) {
+    if (done) {
+      if (ifspSrc) {
+        html += `<div class="date-logged-ifsp">
+          📋 ${date} <span class="badge">from IFSP</span>
+          <span class="clear" data-clear="${id}">clear</span>
+        </div>`;
+      } else {
+        html += `<div class="date-logged">
+          ✓ Logged ${date}
+          <span class="clear" data-clear="${id}">clear</span>
+        </div>`;
+      }
+    } else {
+      html += `<button class="action-btn btn-primary" data-log="${id}">
+        Mark as done — log today
+      </button>`;
+    }
+  }
+
+  html += `</div>`;
+
+  // ── Email template card
+  if (id === 'send-request') {
+    const tmpl = getEmailTemplate();
+    html += `<div class="detail-card">
+      <div class="detail-section-label" style="margin-bottom:4px">Email template</div>
+      <p style="font-size:11.5px;color:#9B9086;margin-bottom:10px">Pre-filled from Luca's IFSP. Select a school above to auto-fill the recipient.</p>
+      <pre id="emailTmpl" style="font-family:Georgia,serif;font-size:12.5px;line-height:1.75;color:#4A4A4A;white-space:pre-wrap;margin-bottom:12px;background:#FAFAF8;border-radius:8px;padding:12px;border:1px solid #E0D8CE">${tmpl}</pre>
+      <button class="action-btn btn-ghost" id="copyEmailBtn">Copy email</button>
+    </div>`;
+  }
+
+  if (id === 'request-iee') {
+    const ieeTemplate = `Dear [Special Education Director],\n\nI am requesting an Independent Educational Evaluation (IEE) at public expense for my child, ${CHILD} Martinez.\n\nI disagree with the evaluation recently conducted by MCPS because I do not believe it accurately reflects ${CHILD}'s abilities and needs.\n\nUnder IDEA 34 C.F.R. § 300.502, please provide a list of district-approved IEE evaluators and the process for funding the IEE.\n\nThank you,\nElena Martinez\n[Date]`;
+    html += `<div class="detail-card">
+      <div class="detail-section-label" style="margin-bottom:10px">IEE request template</div>
+      <pre style="font-family:Georgia,serif;font-size:12.5px;line-height:1.7;color:#4A4A4A;white-space:pre-wrap;margin-bottom:12px">${ieeTemplate}</pre>
+      <button class="action-btn btn-ghost" data-copy-text="${encodeURIComponent(ieeTemplate)}">Copy template</button>
+    </div>`;
+  }
+
+  // ── IFSP transition timeline card (for eligibility-meeting)
+  if (id === 'eligibility-meeting') {
+    const now = Date.now();
+    html += `<div class="detail-card">
+      <div class="detail-section-label" style="margin-bottom:10px">Transition timeline — from Luca's IFSP</div>
+      <table class="ifsp-timeline">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Action</th>
+            <th>Who</th>
+          </tr>
+        </thead>
+        <tbody>`;
+    for (const ts of IFSP.transitionSteps) {
+      const isPast = ts.epochMs < now - 86400000;
+      const isNear = !isPast && ts.epochMs < now + (8 * 86400000);
+      const rowCls = isPast ? 't-done' : isNear ? 't-urgent' : '';
+      html += `<tr class="${rowCls}">
+        <td class="t-date">${ts.date}</td>
+        <td class="t-action">${ts.action}</td>
+        <td class="t-party">${ts.party}</td>
+      </tr>`;
+    }
+    html += `</tbody></table>
+      <p style="font-size:11px;color:#9B9086;margin-top:10px;">Parsed from IFSP Transition Plan section, April 14, 2026. Source: MCITP.</p>
+    </div>`;
+  }
+
+  // ── Branch chooser card
+  if (step.isBranch) {
+    const chosen = state.branchChoices[id];
+    html += `<div class="detail-card">
+      <div class="detail-section-label" style="margin-bottom:10px">${step.branchLabel}</div>
+      <div class="branch-chooser">`;
+    for (const branchId of step.branches) {
+      const bc = BRANCH_COLORS[branchId];
+      const isChosen = branchId === chosen;
+      html += `<button class="branch-choice-btn${isChosen ? ' chosen' : ''}" data-branch-step="${id}" data-branch="${branchId}">
+        <div>
+          <div class="bc-label">${bc.label}</div>
+        </div>
+        <div class="bc-icon">${bc.icon}</div>
+      </button>`;
+    }
+    html += `</div>`;
+    if (chosen) {
+      html += `<p style="font-size:11.5px;color:#9B9086;margin-top:10px">Click a different option to change path.</p>`;
+    }
+    html += `</div>`;
+  }
+
+  panel.innerHTML = html;
+  attachDetailEvents();
+}
+
+function attachDetailEvents() {
+  document.querySelectorAll('[data-log]').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.dataset.log;
+      const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      state.datesLogged[id] = today;
+      state.activeStep = getNextStep(id);
+      saveState();
+      renderMap();
+      renderDetail();
+    });
+  });
+
+  document.querySelectorAll('[data-clear]').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.dataset.clear;
+      delete state.datesLogged[id];
+      state.ifspSourced = (state.ifspSourced || []).filter(x => x !== id);
+      saveState();
+      renderMap();
+      renderDetail();
+    });
+  });
+
+  const copyEmailBtn = document.getElementById('copyEmailBtn');
+  if (copyEmailBtn) {
+    copyEmailBtn.addEventListener('click', () => {
+      const tmpl = getEmailTemplate();
+      navigator.clipboard?.writeText(tmpl).catch(() => {});
+      copyEmailBtn.textContent = 'Copied!';
+      setTimeout(() => copyEmailBtn.textContent = 'Copy email', 2000);
+    });
+  }
+
+  document.querySelectorAll('[data-copy-text]').forEach(el => {
+    el.addEventListener('click', () => {
+      const txt = decodeURIComponent(el.dataset.copyText);
+      navigator.clipboard?.writeText(txt).catch(() => {});
+      el.textContent = 'Copied!';
+      setTimeout(() => el.textContent = 'Copy template', 2000);
+    });
+  });
+
+  document.querySelectorAll('.branch-choice-btn').forEach(el => {
+    el.addEventListener('click', () => {
+      const branchStepId = el.dataset.branchStep;
+      const branchId = el.dataset.branch;
+      if (state.branchChoices[branchStepId] === branchId) {
+        delete state.branchChoices[branchStepId];
+        clearDownstreamChoices(branchId);
+        state.activeStep = branchStepId;
+      } else {
+        state.branchChoices[branchStepId] = branchId;
+        const first = getFirstStepOfBranch(branchId);
+        state.activeStep = first || branchStepId;
+      }
+      saveState();
+      renderMap();
+      renderDetail();
+    });
+  });
+}
+
+function getNextStep(currentId) {
+  const path = getActivePath();
+  const idx = path.findIndex(p => p.step.id === currentId);
+  return (idx >= 0 && idx < path.length - 1) ? path[idx + 1].step.id : currentId;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESET BUTTON
+// ─────────────────────────────────────────────────────────────────────────────
+
+function addResetButton() {
+  const hdr = document.querySelector('.hdr-right');
+  const btn = document.createElement('button');
+  btn.textContent = 'Reset';
+  btn.style.cssText = 'font-size:11px;background:rgba(255,255,255,0.1);border:none;color:#9FB7C8;border-radius:6px;padding:4px 10px;cursor:pointer;';
+  btn.addEventListener('click', () => {
+    if (confirm('Reset all progress?')) {
+      localStorage.removeItem(KEY);
+      state = defaultState();
+      document.getElementById('schoolPicker').value = '';
+      document.getElementById('mapPanel').classList.add('hidden');
+      const toggleBtn = document.getElementById('journeyToggleBtn');
+      if (toggleBtn) { toggleBtn.classList.remove('map-open'); toggleBtn.classList.add('pulsing'); }
+      renderMap();
+      renderDetail();
+      updatePathLabel();
+    }
+  });
+  hdr.appendChild(btn);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+
+addResetButton();
+initSchoolPicker();
+// Restore map panel visibility from saved state
+if (state.mapOpen) {
+  document.getElementById('mapPanel').classList.remove('hidden');
+} else {
+  document.getElementById('mapPanel').classList.add('hidden');
+}
+renderMap();
+renderDetail();
+updatePathLabel();
+</script>
+</body>
+</html>
